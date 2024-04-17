@@ -1,4 +1,4 @@
-const { NotFoundError } = require('../../../MEN/Jobs API/errors')
+const { NotFoundError } = require('../errors/not-found')
 const Company = require('../models/company')
 const Role = require('../models/role')
 const { StatusCodes } = require('http-status-codes')
