@@ -1,7 +1,7 @@
 class CustomAPIError extends Error {
-  constructor(message) {
-    super(message)
+  constructor(success, message) {
+    super(success, message);
   }
 }
 
-module.exports = CustomAPIError
+module.exports = CustomAPIError;
