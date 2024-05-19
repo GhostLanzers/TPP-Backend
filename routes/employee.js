@@ -7,6 +7,7 @@ const {
   addEmployee,
   updateEmployee,
   deleteEmployee,
+  bulkInsert
 } = require("../controllers/employee");
 
 router.route("/").get(getAllEmployees).post(addEmployee);
@@ -15,5 +16,6 @@ router
   .get(getEmployee)
   .patch(updateEmployee)
   .delete(deleteEmployee);
+  router.route("/bulkinsert").post(bulkInsert)
 
 module.exports = router;

@@ -138,6 +138,12 @@ const getCompanyCounts = async (req, res) => {
   res.status(StatusCodes.OK).json(values);
 };
 
+const bulkInsert = async(req,res)=>{
+  const data = req.body 
+  console.log(data);
+  const companies = await Company.insertMany(data)
+  res.status(StatusCodes.CREATED).json({success:true})
+}
 module.exports = {
   getAllCompanies,
   addCompany,
@@ -148,4 +154,5 @@ module.exports = {
   addResponseTypes,
   getCompanyUseType,
   getCompanyCounts,
+  bulkInsert
 };

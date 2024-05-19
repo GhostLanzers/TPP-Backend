@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
 const { roleSchema } = require("./role");
-var CounterSchema = new mongoose.Schema({
-  _id: { type: String, required: true },
-  seq: { type: Number, default: 0 },
-});
-var counter = mongoose.model("counter", CounterSchema);
+const Counter = require('./count')
 
 const companySchema = new mongoose.Schema({
   companyName: {
@@ -75,7 +71,7 @@ const companySchema = new mongoose.Schema({
 companySchema.pre("save", function (next) {
   if (this.isNew) {
     var doc = this;
-    counter
+    Counter
       .findByIdAndUpdate(
         { _id: "companyCounter" },
         { $inc: { seq: 1 } },
@@ -92,4 +88,21 @@ companySchema.pre("save", function (next) {
     next();
   }
 });
+
+companySchema.pre("insertMany", async function(next,docs){
+  try{
+    for( const doc of docs){
+      const counter = await Counter.findByIdAndUpdate(
+        { _id: "companyCounter" },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      )
+      doc.companyId = "COM" + String(counter.seq).padStart(5, "0");
+    }
+    next()
+  }catch(err){
+    throw err
+  }
+})
+
 module.exports = new mongoose.model("Company", companySchema);

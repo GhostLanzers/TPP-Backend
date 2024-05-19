@@ -12,6 +12,9 @@ const authorizationMiddleware = (req, res, next) => {
   try {
     const payload = jwt.verify(token, process.env.SECRET);
     console.log(payload);
+    const {userMail} =payload;
+    req.user = {userMail}
+    console.log(req.user);
     next();
   } catch (error) {
     throw new UnauthenticatedError("Authentication Error");

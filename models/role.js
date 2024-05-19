@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
-
+const Counter = require("./count");
 const roleSchema = new mongoose.Schema({
+  roleId:String,
   status: {
     type: Boolean,
     default: true,
@@ -92,5 +93,23 @@ roleSchema.pre('save', function (next) {
   }
   next()
 })
-
+roleSchema.pre("save", function (next) {
+  if (this.isNew) {
+    var doc = this;
+    Counter.findByIdAndUpdate(
+      { _id: "companyCounter" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    )
+      .then(function (count) {
+        doc.roleId = "COM" + String(count.seq).padStart(5, "0");
+        next();
+      })
+      .catch(function (error) {
+        throw error;
+      });
+  } else {
+    next();
+  }
+});
 module.exports = mongoose.model('Role',roleSchema)

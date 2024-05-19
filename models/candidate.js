@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+const Counter = require("./count");
 const candidateSchema = mongoose.Schema({
   fullName: {
     type: String,
@@ -11,6 +12,7 @@ const candidateSchema = mongoose.Schema({
     unique: true,
   },
   email: [String],
+  candidateId:String,
   homeTown: String,
   currentCity: String,
   qualifications: {
@@ -184,6 +186,26 @@ const candidateSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employee",
   },
+});
+
+candidateSchema.pre("save", function (next) {
+  if (this.isNew) {
+    var doc = this;
+    Counter.findByIdAndUpdate(
+      { _id: "candidateCounter" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    )
+      .then(function (count) {
+        doc.candidateId = "CAN" + String(count.seq).padStart(5, "0");
+        next();
+      })
+      .catch(function (error) {
+        throw error;
+      });
+  } else {
+    next();
+  }
 });
 
 module.exports = new mongoose.model("Candidate", candidateSchema);

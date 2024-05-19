@@ -57,11 +57,17 @@ const updateEmployee = async (req, res) => {
   }
   res.status(StatusCodes.OK).json({ employee });
 };
-
+const bulkInsert = async (req, res) => {
+  const data = req.body;
+  //console.log(data);
+  const employees = await Employee.insertMany(data);
+  res.status(StatusCodes.CREATED).json({ success: true });
+};
 module.exports = {
   getAllEmployees,
   getEmployee,
   addEmployee,
   updateEmployee,
   deleteEmployee,
+  bulkInsert
 };
