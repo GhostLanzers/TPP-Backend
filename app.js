@@ -17,7 +17,7 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 
 // middleware
 
-app.use(express.json());
+app.use(express.json({ limit: 52428800 }));
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/status", authMiddle, status);
 app.use("/api/v1/company", authMiddle, company);

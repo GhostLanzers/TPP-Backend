@@ -12,14 +12,14 @@ const candidateSchema = mongoose.Schema({
     unique: true,
   },
   email: [String],
-  candidateId:String,
+  candidateId: String,
   homeTown: String,
   currentCity: String,
   qualifications: {
     type: [
       {
         qualification: String,
-        YOP: Date,
+        YOP: String,
       },
     ],
   },
@@ -32,6 +32,7 @@ const candidateSchema = mongoose.Schema({
           enum: {
             values: ["Beginner", "Intermediate", "Advanced", "Proficient"],
           },
+          default: "Beginner",
         },
       },
     ],
@@ -49,93 +50,82 @@ const candidateSchema = mongoose.Schema({
       },
     ],
   },
-  application: {
-    type: {
-      companyId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Company",
-      },
-      roleId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Role",
-      },
-      interviewDate: Date,
-      remarks: String,
-      interviewStatus: {
-        type: String,
-        enum: {
-          values: [
-            "TPP Venue",
-            "Client Venue",
-            "Virtual Interview",
-            "Reject FSR Communication",
-            "Reject FSR Stability",
-            "Reject FSR Domain",
-            "Reject Amcat",
-            "Reject Amcat - Technical Issue Reject Amcat Cooling Period",
-            "Reject Versant",
-            "Reject Versant - Technical Issue",
-            "Reject Versant Cooling Period",
-            "Reject Technical",
-            "Reject Typing",
-            "Reject Group Discussion",
-            "Reject Ops/Client Communication",
-            "Reject Ops/Client Stability",
-            "Reject Ops/Client Domain",
-            "Reject Vice President",
-            "No Show Walk-in",
-            "No Show IC",
-            "Hold",
-            "Pending FSR",
-            "Pending Amcat",
-            "Pending Versant",
-            "Pending Technical",
-            "Pending Typing",
-            "Pending Group Discussion",
-            "Pending Ops/Client",
-            "Pending Vice President",
-            "Offer Drop",
-            "Select",
-          ],
-        },
-      },
-      select: {
-        type: String,
-        enum: {
-          values: [
-            "Tracking",
-            "Non Tenure",
-            "Need to Bill",
-            "Billed",
-            "Process Rampdown",
-            "Client Rampdown",
-          ],
-        },
-        required: [
-          function () {
-            return this.interviewStatus == "Select";
-          },
-          "You can select if you selected Select in Interview Status",
-        ],
-      },
-      tracking: {
-        type: {
-          EMP_Id: {
-            type: String,
-            required: [true, "Need to provide Employee ID"],
-          },
-          onboardingDate: Date,
-          nextTrackingDate: Date,
-        },
-      },
+
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+  },
+  roleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Role",
+  },
+  interviewDate: Date,
+  remarks: String,
+  interviewStatus: {
+    type: String,
+    enum: {
+      values: [
+        "TPP Venue",
+        "Client Venue",
+        "Virtual Interview",
+        "Reject FSR Communication",
+        "Reject FSR Stability",
+        "Reject FSR Domain",
+        "Reject Amcat",
+        "Reject Amcat - Technical Issue Reject Amcat Cooling Period",
+        "Reject Versant",
+        "Reject Versant - Technical Issue",
+        "Reject Versant Cooling Period",
+        "Reject Technical",
+        "Reject Typing",
+        "Reject Group Discussion",
+        "Reject Ops/Client Communication",
+        "Reject Ops/Client Stability",
+        "Reject Ops/Client Domain",
+        "Reject Vice President",
+        "No Show Walk-in",
+        "No Show IC",
+        "Hold",
+        "Pending FSR",
+        "Pending Amcat",
+        "Pending Versant",
+        "Pending Technical",
+        "Pending Typing",
+        "Pending Group Discussion",
+        "Pending Ops/Client",
+        "Pending Vice President",
+        "Offer Drop",
+        "Select",
+      ],
+    },
+  },
+  select: {
+    type: String,
+    enum: {
+      values: [
+        "Tracking",
+        "Non Tenure",
+        "Need to Bill",
+        "Billed",
+        "Process Rampdown",
+        "Client Rampdown",
+      ],
     },
     required: [
       function () {
-        return this.l2Assessment == "TAC" || this.l2Assessment == "GOOD";
+        return this.interviewStatus == "Select";
       },
-      "You can fill this if candidate is Good or TAC",
+      "You can select if you selected Select in Interview Status",
     ],
   },
+
+  EMP_ID: {
+    type: String,
+    // required: [true, "Need to provide Employee ID"],
+  },
+  onboardingDate: Date,
+  nextTrackingDate: Date,
+
   l1Assessment: {
     type: String,
     enum: {
@@ -205,6 +195,22 @@ candidateSchema.pre("save", function (next) {
       });
   } else {
     next();
+  }
+});
+
+candidateSchema.pre("insertMany", async function (next, docs) {
+  try {
+    for (const doc of docs) {
+      const counter = await Counter.findByIdAndUpdate(
+        { _id: "candidateCounter" },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      doc.candidateId = "CAN" + String(counter.seq).padStart(7, "0");
+    }
+    next();
+  } catch (err) {
+    throw err;
   }
 });
 

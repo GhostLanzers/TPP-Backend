@@ -50,7 +50,7 @@ employeeSchema.pre("save", async function () {
 });
 employeeSchema.methods.createJWT = function () {
   return jwt.sign({ userid: this._id,userMail:this.email }, process.env.SECRET, {
-    expiresIn: "1h",
+    expiresIn: "12h",
   });
 };
 

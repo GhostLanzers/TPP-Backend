@@ -76,6 +76,13 @@ const getAssessmentCounts = async (req, res) => {
   const values = await Candidate.aggregate().sortByCount("l1Assessment");
   res.status(StatusCodes.OK).json(values);
 };
+
+const bulkInsert = async (req, res) => {
+  const data = req.body;
+  //console.log(data);
+  const employees = await Candidate.insertMany(data);
+  res.status(StatusCodes.CREATED).json({ success: true });
+};
 module.exports = {
   getAllCandidates,
   getCandidate,
@@ -87,4 +94,5 @@ module.exports = {
   getL2AssessmentValues,
   getSelectValues,
   getAssessmentCounts,
+  bulkInsert
 };
