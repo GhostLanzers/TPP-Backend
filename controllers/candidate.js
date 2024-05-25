@@ -73,13 +73,34 @@ const getL1AssessmentValues = async (req, res) => {
 };
 
 const getAssessmentCounts = async (req, res) => {
-  const values = await Candidate.aggregate().sortByCount("l1Assessment");
-  res.status(StatusCodes.OK).json(values);
+  const l1values = await Candidate.aggregate().sortByCount("l1Assessment");
+  const l2values = await Candidate.aggregate().sortByCount("l2Assessment");
+  const interview = await Candidate.aggregate().sortByCount("interviewStatus");
+  const select = await Candidate.aggregate().sortByCount("select");
+  const awaiting = await Candidate.find({ l1Assessment: ["GOOD",'TAC'],l2Assessment:null });
+  var l1data = {};
+  for (const i of l1values) {
+    l1data[i["_id"]] = i["count"];
+  }
+  var l2data = {};
+  for (const i of l2values) {
+    l2data[i["_id"]] = i["count"];
+  }
+  var interdata = {};
+  for (const i of interview) {
+    interdata[i["_id"]] = i["count"];
+  }
+  var selectData = {};
+  for (const i of select) {
+    selectData[i["_id"]] = i["count"];
+  }
+  console.log(awaiting.length);
+  res.status(StatusCodes.OK).json({ l1data, l2data, interdata, selectData,awaiting:awaiting.length });
 };
 
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  //console.log(data);
+  console.log(data);
   const employees = await Candidate.insertMany(data);
   res.status(StatusCodes.CREATED).json({ success: true });
 };
@@ -94,5 +115,5 @@ module.exports = {
   getL2AssessmentValues,
   getSelectValues,
   getAssessmentCounts,
-  bulkInsert
+  bulkInsert,
 };

@@ -161,16 +161,7 @@ const candidateSchema = mongoose.Schema({
         "GOOD",
       ],
     },
-    required: [
-      function () {
-        return (
-          this.l1Assessment == "WD" ||
-          this.l1Assessment == "TAC" ||
-          this.l1Assessment == "GOOD"
-        );
-      },
-      "Need L2 Assessment for WD TAC and GOOD candidates",
-    ],
+    
   },
   assignedEmployee: {
     type: mongoose.Schema.Types.ObjectId,
