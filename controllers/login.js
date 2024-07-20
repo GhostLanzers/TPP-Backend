@@ -22,6 +22,9 @@ const login = async (req, res) => {
   const passwordMatch = await user.checkPassword(password);
   if (!passwordMatch)
     throw new UnauthenticatedError("Password does not Match , Try Again");
+  if(!user.status)
+    throw new UnauthenticatedError("Access Denied by Admin");
+
   const token = user.createJWT();
   res.status(StatusCodes.OK).json({ success: true, token: token });
 };

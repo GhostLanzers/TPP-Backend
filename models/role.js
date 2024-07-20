@@ -1,26 +1,27 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 const Counter = require("./count");
 const roleSchema = new mongoose.Schema({
-  roleId:String,
+  roleId: String,
   status: {
     type: Boolean,
     default: true,
   },
   role: {
     type: String,
-    default: '',
+    default: "",
   },
   designation: {
     type: String,
-    default: '',
+    default: "",
   },
+  happens:String,
   processType: {
     type: String,
     enum: {
-      values: ['International', 'Domestic'],
-      message: 'Not a valid process type',
+      values: ["International", "Domestic"],
+      message: "Not a valid process type",
     },
-    default: 'Domestic',
+    default: "Domestic",
   },
   experience: {
     type: Number,
@@ -31,28 +32,28 @@ const roleSchema = new mongoose.Schema({
     default: [],
   },
   qualification: {
-    type: String,
-    default: '',
+    type: [String],
+    default: [],
   },
   shift: {
     type: String,
-    default: '',
+    default: "",
   },
   salary: {
     type: String,
-    default: '',
+    default: "",
   },
   cabFacility: {
     type: Boolean,
     default: false,
   },
   location: {
-    type: String,
-    default: '',
+    type: [String],
+    default: [],
   },
   area: {
     type: String,
-    default: '',
+    default: "",
   },
   bond: {
     type: Number,
@@ -60,49 +61,49 @@ const roleSchema = new mongoose.Schema({
   },
   ageCriteria: {
     type: String,
-    default: '',
+    default: "",
   },
   period: {
     type: String,
     enum: {
-      values: ['Permanent', 'Contract', 'Notice Period', 'Buyout'],
-      message: 'Not a valid period',
+      values: ["Permanent", "Contract", "Notice Period", "Buyout"],
+      message: "Not a valid period",
     },
-    default: 'Permanent',
+    default: "Permanent",
   },
   otherDocs: {
     type: String,
-    default: '',
+    default: "",
   },
-  orginalJD: {
+  originalJD: {
     type: String,
-    default: '',
+    default: "",
   },
   faqs: {
     type: String,
-    default: '',
+    default: "",
   },
   rejectionReasons: {
     type: [String],
     default: [],
   },
-})
-roleSchema.pre('save', function (next) {
-  if ('invalid' == this.name) {
-    return next(new Error('#sadpanda'))
+});
+roleSchema.pre("save", function (next) {
+  if ("invalid" == this.name) {
+    return next(new Error("#sadpanda"));
   }
-  next()
-})
+  next();
+});
 roleSchema.pre("save", function (next) {
   if (this.isNew) {
     var doc = this;
     Counter.findByIdAndUpdate(
-      { _id: "companyCounter" },
+      { _id: "roleCounter" },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     )
       .then(function (count) {
-        doc.roleId = "COM" + String(count.seq).padStart(5, "0");
+        doc.roleId = "ROL" + String(count.seq).padStart(5, "0");
         next();
       })
       .catch(function (error) {
@@ -112,4 +113,4 @@ roleSchema.pre("save", function (next) {
     next();
   }
 });
-module.exports = mongoose.model('Role',roleSchema)
+module.exports = new mongoose.model("Role", roleSchema);

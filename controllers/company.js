@@ -9,6 +9,7 @@ const getAllCompanies = async (req, res) => {
   return res.status(StatusCodes.OK).json(companies);
 };
 const addCompany = async (req, res) => {
+  console.log(req.body);
   const cRoles = req.body.roles || [];
   const saveRoles = async () => {
     var roleIDs = [];
@@ -40,6 +41,7 @@ const addCompanyRoles = async (req, res) => {
     params: { id: companyId },
   } = req;
   const cRoles = req.body.roles;
+  console.log("Hi");
   const saveRoles = async () => {
     var roleIDs = [];
     for (let role = 0; role < cRoles.length; role++) {
@@ -60,7 +62,7 @@ const addCompanyRoles = async (req, res) => {
       _id: companyId,
     },
     {
-      ...req.body,
+      $push: { ...req.body },
     },
     {
       new: true,
@@ -95,7 +97,15 @@ const getRoles = async (req, res) => {
   res.status(StatusCodes.OK).json(companyRoles);
   // const companyRoles = company.;
 };
-
+const getCompany = async (req, res) => {
+  const {
+    params: { id: companyId },
+  } = req;
+  const company = await Company.findOne({ _id: companyId })
+    .populate("roles")
+    .exec();
+  res.status(StatusCodes.OK).json(company);
+};
 const deleteCompany = async (req, res) => {
   const {
     params: { id: companyId },
@@ -129,21 +139,51 @@ const addResponseTypes = async (req, res) => {
 const getCompanyUseType = async (req, res) => {
   const { companyType: companyType } = req.query;
   console.log(req.query);
-  const companies = await Company.find({ response: companyType });
+  const companies = await Company.find({ response: companyType }).populate('roles').exec();
   res.status(StatusCodes.OK).json(companies);
 };
 
 const getCompanyCounts = async (req, res) => {
   const values = await Company.aggregate().sortByCount("response");
+  console.log(values);
   res.status(StatusCodes.OK).json(values);
 };
 
-const bulkInsert = async(req,res)=>{
-  const data = req.body 
+const bulkInsert = async (req, res) => {
+  const data = req.body;
   console.log(data);
-  const companies = await Company.insertMany(data)
-  res.status(StatusCodes.CREATED).json({success:true})
-}
+  const companies = await Company.insertMany(data);
+  res.status(StatusCodes.CREATED).json({ success: true });
+};
+const getRole = async (req, res) => {
+  const {
+    params: { companyId: companyId, roleId: roleId },
+  } = req;
+  const company = await Company.find({ _id: companyId });
+  if (!company) {
+    throw new NotFoundError("Company not found with given id");
+  }
+  const role = await Role.find({ _id: roleId });
+  if (!role) {
+    throw new NotFoundError("Role not found with given id");
+  }
+  res.status(StatusCodes.OK).json(role);
+};
+const updateRole = async (req, res) => {
+  const {
+    params: { companyId: companyId, roleId: roleId },
+  } = req;
+  const company = await Company.find({ _id: companyId });
+  if (!company) {
+    throw new NotFoundError("Company not found with given id");
+  }
+  const data = req.body
+  const role = await Role.findByIdAndUpdate({ _id: roleId },{...data});
+  if (!role) {
+    throw new NotFoundError("Role not found with given id");
+  }
+  res.status(StatusCodes.OK).json(role);
+};
 module.exports = {
   getAllCompanies,
   addCompany,
@@ -154,5 +194,8 @@ module.exports = {
   addResponseTypes,
   getCompanyUseType,
   getCompanyCounts,
-  bulkInsert
+  bulkInsert,
+  getCompany,
+  getRole,
+  updateRole
 };

@@ -11,6 +11,7 @@ require("dotenv").config();
 
 const addEmployee = async (req, res) => {
   const { DOJ: DOJ, DOB: DOB, ...rest } = req.body;
+  console.log(req.body);
   const employee = await Employee.create({
     ...rest,
     DOJ: Date(DOJ),
@@ -67,6 +68,11 @@ const getEmployeeCounts = async (req,res)=>{
   const values = await Employee.aggregate().sortByCount("employeeType");
   res.status(StatusCodes.OK).json(values);
 }
+const getEmployeesByType = async (req,res) =>{
+const { type: employeeType } = req.params;
+const employees = await Employee.find({employeeType:employeeType})
+res.status(StatusCodes.OK).json(employees)
+}
 module.exports = {
   getAllEmployees,
   getEmployee,
@@ -74,5 +80,6 @@ module.exports = {
   updateEmployee,
   deleteEmployee,
   bulkInsert,
-  getEmployeeCounts
+  getEmployeeCounts,
+  getEmployeesByType
 };

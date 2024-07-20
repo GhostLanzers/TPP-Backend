@@ -14,7 +14,9 @@ app.use(cors());
 // error handler
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
-
+const location = require("./routes/location");
+const skill = require("./routes/skill");
+const extra = require("./routes/extra");
 // middleware
 
 app.use(express.json({ limit: 52428800 }));
@@ -23,6 +25,9 @@ app.use("/api/v1/status", authMiddle, status);
 app.use("/api/v1/company", authMiddle, company);
 app.use("/api/v1/employee", authMiddle, employee);
 app.use("/api/v1/candidate", authMiddle, candidate);
+app.use("/api/v1/location", authMiddle, location);
+app.use("/api/v1/skill", authMiddle, skill);
+app.use("/api/v1/extra", authMiddle, extra);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 

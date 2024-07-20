@@ -1,6 +1,8 @@
 const { StatusCodes } = require("http-status-codes");
 const { NotFoundError } = require("../errors/not-found");
 const Candidate = require("../models/candidate");
+const Role = require("../models/role");
+const Count = require("../models/count");
 
 const addCandidate = async (req, res) => {
   const candidate = await Candidate.create({ ...req.body });
@@ -8,7 +10,31 @@ const addCandidate = async (req, res) => {
 };
 
 const getAllCandidates = async (req, res) => {
-  const candidates = await Candidate.find({});
+  const {
+    l1Assessment: l1Assessment,
+    l2Assessment: l2Assessment,
+    select: select,
+    interviewStatus: interviewStatus,
+    awaiting: awaiting,
+  } = req.query;
+  var query = [];
+  if (l1Assessment)
+    query.push({ l1Assessment: { $in: l1Assessment.split(",") } });
+  if (l2Assessment)
+    query.push({ l2Assessment: { $in: l2Assessment.split(",") } });
+  if (select) query.push({ select: { $in: select.split(",") } });
+  if (interviewStatus)
+    query.push({ interviewStatus: { $in: interviewStatus.split(",") } });
+  console.log(query.length);
+  if (query.length == 0) {
+    query = {};
+  } else if (awaiting) {
+    query = { l1Assessment: ["GOOD", "TAC"], l2Assessment: null };
+  } else {
+    query = { $or: query };
+  }
+  const candidates = await Candidate.find(query);
+
   res.status(StatusCodes.OK).json(candidates);
 };
 
@@ -17,7 +43,10 @@ const getCandidate = async (req, res) => {
   console.log(candidateId);
   const candidate = await Candidate.findById({
     _id: candidateId,
-  });
+  })
+    .populate("companyId")
+    .populate("roleId")
+    .exec();
   if (!candidate) throw new NotFoundError("Candidate with given ID Not Found");
   res.status(StatusCodes.OK).json(candidate);
 };
@@ -77,7 +106,10 @@ const getAssessmentCounts = async (req, res) => {
   const l2values = await Candidate.aggregate().sortByCount("l2Assessment");
   const interview = await Candidate.aggregate().sortByCount("interviewStatus");
   const select = await Candidate.aggregate().sortByCount("select");
-  const awaiting = await Candidate.find({ l1Assessment: ["GOOD",'TAC'],l2Assessment:null });
+  const awaiting = await Candidate.find({
+    l1Assessment: ["GOOD", "TAC"],
+    l2Assessment: null,
+  });
   var l1data = {};
   for (const i of l1values) {
     l1data[i["_id"]] = i["count"];
@@ -94,8 +126,20 @@ const getAssessmentCounts = async (req, res) => {
   for (const i of select) {
     selectData[i["_id"]] = i["count"];
   }
+  const allCandidate = await Count.findById("candidateCounter");
+  const allCompany = await Count.findById("companyCounter");
   console.log(awaiting.length);
-  res.status(StatusCodes.OK).json({ l1data, l2data, interdata, selectData,awaiting:awaiting.length });
+  res
+    .status(StatusCodes.OK)
+    .json({
+      l1data,
+      l2data,
+      interdata,
+      selectData,
+      awaiting: awaiting.length,
+      allCompany: allCompany,
+      allCandidate: allCandidate,
+    });
 };
 
 const bulkInsert = async (req, res) => {
@@ -104,6 +148,55 @@ const bulkInsert = async (req, res) => {
   const employees = await Candidate.insertMany(data);
   res.status(StatusCodes.CREATED).json({ success: true });
 };
+
+const searchCandidate = async (req, res) => {
+  const { name: name, mobile: mobile, email: email } = req.body;
+  query = [];
+  if (name) query.push({ fullName: { $regex: ".*" + name + ".*" } });
+  if (mobile) query.push({ mobile: { $in: mobile } });
+  if (email) query.push({ email: { $in: email } });
+  const candidates = await Candidate.find({ $or: query });
+
+  res.status(StatusCodes.OK).json(candidates);
+};
+const getPotentialLeads = async (req, res) => {
+  const { query: query, roleId: roleId, companyId: companyId } = req.body;
+  const role = await Role.findById({ _id: roleId });
+
+  searchquery = {
+    "qualifications.qualification": { $in: role.qualification },
+    $or: [
+      { currentCity: { $in: role.location } },
+      { homeTown: { $in: role.location } },
+    ],
+    skills: { $in: role.skill },
+  };
+  if (query.length > 0) searchquery["$nor"] = query;
+  console.log(searchquery);
+  const candidates = await Candidate.find(searchquery);
+  res.status(StatusCodes.OK).json(candidates);
+};
+
+const assignRecruiter = async (req, res) => {
+  const { list: list } = req.body;
+  var candidates = [];
+  list.forEach(({ emp, part }) => {
+    part.forEach(async (_id) => {
+      const candidate = await Candidate.findByIdAndUpdate(
+        { _id: _id },
+        { assignedEmployee: emp }
+      );
+      candidates.push(candidate);
+    });
+  });
+  res.status(StatusCodes.OK).json(candidates);
+};
+const assignSearch = async (req,res) =>{
+  console.log("Hi",req.body.query);
+  const candidates = await Candidate.find({...req.body.query})
+  res.status(StatusCodes.OK).json({candidates})
+}
+
 module.exports = {
   getAllCandidates,
   getCandidate,
@@ -116,4 +209,8 @@ module.exports = {
   getSelectValues,
   getAssessmentCounts,
   bulkInsert,
+  searchCandidate,
+  getPotentialLeads,
+  assignRecruiter,
+  assignSearch
 };

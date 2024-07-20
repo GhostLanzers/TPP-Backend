@@ -18,15 +18,16 @@ const employeeSchema = mongoose.Schema({
         "Manager",
         "Intern",
         "Business Development",
+        "Admin"
       ],
     },
   },
-  mobile: String,
+  mobile: [String],
   parentMobile: String,
   gender: {
     type: String,
     enum: {
-      values: ["Male", "Female"],
+      values: ["Male", "Female","Other"],
     },
   },
   currentAddress: String,
@@ -42,23 +43,8 @@ const employeeSchema = mongoose.Schema({
     default: true,
   },
 });
-
-employeeSchema.pre("save", async function () {
- 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-employeeSchema.methods.createJWT = function () {
-  return jwt.sign({ userid: this._id,userMail:this.email }, process.env.SECRET, {
-    expiresIn: "12h",
-  });
-};
-
-employeeSchema.methods.checkPassword = async function (providedPassword) {
-  const match = await bcrypt.compare(providedPassword, this.password);
-  return match;
-};
-employeeSchema.pre("save", function (next) {
+employeeSchema.pre("save", function  (next) {
+  
   if (this.isNew) {
     var doc = this;
     Counter.findByIdAndUpdate(
@@ -68,6 +54,9 @@ employeeSchema.pre("save", function (next) {
     )
       .then(function (count) {
         doc.employeeId = "EMP" + String(count.seq).padStart(5, "0");
+        if(!doc.password)
+          doc.password = "TPP@Pass";
+      
         next();
       })
       .catch(function (error) {
@@ -77,6 +66,22 @@ employeeSchema.pre("save", function (next) {
     next();
   }
 });
+
+employeeSchema.pre("save", async function () {
+ console.log("HI");
+  const salt = await bcrypt.genSalt(10);
+  this.password = bcrypt.hash(this.password, salt);
+});
+employeeSchema.methods.createJWT = function () {
+  return jwt.sign({ userid: this._id,userMail:this.email,employeeType:this.employeeType,status:this.status }, process.env.SECRET, {
+    expiresIn: "12h",
+  });
+};
+
+employeeSchema.methods.checkPassword = async function (providedPassword) {
+  const match = await bcrypt.compare(providedPassword, this.password);
+  return match;
+};
 
 employeeSchema.pre("insertMany", async function (next, docs) {
   try {

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const Location = require('./location')
 const Counter = require("./count");
 const candidateSchema = mongoose.Schema({
   fullName: {
@@ -13,8 +13,12 @@ const candidateSchema = mongoose.Schema({
   },
   email: [String],
   candidateId: String,
-  homeTown: String,
-  currentCity: String,
+  homeTown: {
+    type:String
+  },
+  currentCity: {
+    type:String
+  },
   qualifications: {
     type: [
       {
@@ -161,7 +165,6 @@ const candidateSchema = mongoose.Schema({
         "GOOD",
       ],
     },
-    
   },
   assignedEmployee: {
     type: mongoose.Schema.Types.ObjectId,

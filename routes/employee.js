@@ -8,7 +8,8 @@ const {
   updateEmployee,
   deleteEmployee,
   bulkInsert,
-  getEmployeeCounts
+  getEmployeeCounts,
+  getEmployeesByType
 } = require("../controllers/employee");
 
 router.route("/").get(getAllEmployees).post(addEmployee);
@@ -19,5 +20,6 @@ router
   .delete(deleteEmployee);
   router.route("/bulkinsert").post(bulkInsert)
   router.route("/counts/counts").get(getEmployeeCounts)
+  router.route("/employeeType/:type").get(getEmployeesByType)
 
 module.exports = router;
