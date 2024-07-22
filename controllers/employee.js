@@ -11,7 +11,6 @@ require("dotenv").config();
 
 const addEmployee = async (req, res) => {
   const { DOJ: DOJ, DOB: DOB, ...rest } = req.body;
-  console.log(req.body);
   const employee = await Employee.create({
     ...rest,
     DOJ: Date(DOJ),
@@ -45,6 +44,11 @@ const deleteEmployee = async (req, res) => {
 
 const updateEmployee = async (req, res) => {
   const { id: employeeId } = req.params;
+
+  if (req.body.password == "TPP@Pass") {
+    const salt = await bcrypt.genSalt(10);
+    req.body.password = await bcrypt.hash(req.body.password, salt);
+  }
   const employee = await Employee.findByIdAndUpdate(
     { _id: employeeId },
     { ...req.body },
@@ -60,19 +64,46 @@ const updateEmployee = async (req, res) => {
 };
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  //console.log(data);
   const employees = await Employee.insertMany(data);
   res.status(StatusCodes.CREATED).json({ success: true });
 };
-const getEmployeeCounts = async (req,res)=>{
+const getEmployeeCounts = async (req, res) => {
   const values = await Employee.aggregate().sortByCount("employeeType");
   res.status(StatusCodes.OK).json(values);
-}
-const getEmployeesByType = async (req,res) =>{
-const { type: employeeType } = req.params;
-const employees = await Employee.find({employeeType:employeeType})
-res.status(StatusCodes.OK).json(employees)
-}
+};
+const getEmployeesByType = async (req, res) => {
+  const { type: employeeType } = req.params;
+  const employees = await Employee.find({ employeeType: employeeType });
+  res.status(StatusCodes.OK).json(employees);
+};
+
+const updatePassword = async (req, res) => {
+  const { id: employeeId } = req.params;
+  const user = await Employee.findById({ _id: employeeId });
+  const pMatch = await user.checkPassword(req.body.current)
+  if (!user) {
+    throw new NotFoundError("Employee with given ID not found");
+  }
+  if (!pMatch)
+    throw new BadRequestError(
+      "Current Password Does not Match with existing password"
+    );
+
+  const salt = await bcrypt.genSalt(10);
+  const newPassword = await bcrypt.hash(req.body.new, salt);
+ 
+  const employee = await Employee.findByIdAndUpdate(
+    { _id: employeeId },
+    { ...user._doc, password:newPassword },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  
+  res.status(StatusCodes.OK).json({ employee,new:req.body.new });
+};
+
 module.exports = {
   getAllEmployees,
   getEmployee,
@@ -81,5 +112,6 @@ module.exports = {
   deleteEmployee,
   bulkInsert,
   getEmployeeCounts,
-  getEmployeesByType
+  getEmployeesByType,
+  updatePassword
 };

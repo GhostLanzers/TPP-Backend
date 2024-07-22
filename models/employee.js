@@ -68,12 +68,11 @@ employeeSchema.pre("save", function  (next) {
 });
 
 employeeSchema.pre("save", async function () {
- console.log("HI");
   const salt = await bcrypt.genSalt(10);
   this.password = bcrypt.hash(this.password, salt);
 });
 employeeSchema.methods.createJWT = function () {
-  return jwt.sign({ userid: this._id,userMail:this.email,employeeType:this.employeeType,status:this.status }, process.env.SECRET, {
+  return jwt.sign({ userid: this._id,userMail:this.email,employeeType:this.employeeType,status:this.status,name:this.name }, process.env.SECRET, {
     expiresIn: "12h",
   });
 };
@@ -82,6 +81,8 @@ employeeSchema.methods.checkPassword = async function (providedPassword) {
   const match = await bcrypt.compare(providedPassword, this.password);
   return match;
 };
+
+
 
 employeeSchema.pre("insertMany", async function (next, docs) {
   try {

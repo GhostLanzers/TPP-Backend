@@ -3,6 +3,7 @@ const { NotFoundError } = require("../errors/not-found");
 const Candidate = require("../models/candidate");
 const Role = require("../models/role");
 const Count = require("../models/count");
+const Company = require("../models/company");
 
 const addCandidate = async (req, res) => {
   const candidate = await Candidate.create({ ...req.body });
@@ -25,7 +26,7 @@ const getAllCandidates = async (req, res) => {
   if (select) query.push({ select: { $in: select.split(",") } });
   if (interviewStatus)
     query.push({ interviewStatus: { $in: interviewStatus.split(",") } });
-  console.log(query.length);
+
   if (query.length == 0) {
     query = {};
   } else if (awaiting) {
@@ -40,7 +41,7 @@ const getAllCandidates = async (req, res) => {
 
 const getCandidate = async (req, res) => {
   const { id: candidateId } = req.params;
-  console.log(candidateId);
+
   const candidate = await Candidate.findById({
     _id: candidateId,
   })
@@ -126,9 +127,9 @@ const getAssessmentCounts = async (req, res) => {
   for (const i of select) {
     selectData[i["_id"]] = i["count"];
   }
-  const allCandidate = await Count.findById("candidateCounter");
-  const allCompany = await Count.findById("companyCounter");
-  console.log(awaiting.length);
+  const allCandidate = await Candidate.find({});
+  const allCompany = await Company.find({});
+ 
   res
     .status(StatusCodes.OK)
     .json({
@@ -137,14 +138,13 @@ const getAssessmentCounts = async (req, res) => {
       interdata,
       selectData,
       awaiting: awaiting.length,
-      allCompany: allCompany,
-      allCandidate: allCandidate,
+      allCompany: allCompany.length,
+      allCandidate: allCandidate.length,
     });
 };
 
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  console.log(data);
   const employees = await Candidate.insertMany(data);
   res.status(StatusCodes.CREATED).json({ success: true });
 };
@@ -172,7 +172,6 @@ const getPotentialLeads = async (req, res) => {
     skills: { $in: role.skill },
   };
   if (query.length > 0) searchquery["$nor"] = query;
-  console.log(searchquery);
   const candidates = await Candidate.find(searchquery);
   res.status(StatusCodes.OK).json(candidates);
 };
@@ -192,7 +191,6 @@ const assignRecruiter = async (req, res) => {
   res.status(StatusCodes.OK).json(candidates);
 };
 const assignSearch = async (req,res) =>{
-  console.log("Hi",req.body.query);
   const candidates = await Candidate.find({...req.body.query})
   res.status(StatusCodes.OK).json({candidates})
 }

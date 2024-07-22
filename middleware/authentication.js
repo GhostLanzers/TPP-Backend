@@ -12,10 +12,10 @@ const authorizationMiddleware = (req, res, next) => {
   try {
     const payload = jwt.verify(token, process.env.SECRET);
     
-    const {userMail,employeeType,userid,status} =payload;
+    const {userMail,employeeType,userid,status,name} =payload;
     if(!status)
       throw new UnauthenticatedError("Access Denied by Admin");
-    req.user = { userMail, employeeType, userid,status };
+    req.user = { userMail, employeeType, userid,status,name };
     
     next();
   } catch (error) {

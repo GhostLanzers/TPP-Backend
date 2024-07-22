@@ -9,7 +9,6 @@ const getAllCompanies = async (req, res) => {
   return res.status(StatusCodes.OK).json(companies);
 };
 const addCompany = async (req, res) => {
-  console.log(req.body);
   const cRoles = req.body.roles || [];
   const saveRoles = async () => {
     var roleIDs = [];
@@ -30,8 +29,6 @@ const addCompany = async (req, res) => {
     ...rest,
     roles: (await saveRoles()) || [],
   });
-  // const companyRoles = await saveRoles()
-  // console.log('HI', companyRoles)
   const savedCompany = await company.save();
   res.status(StatusCodes.CREATED).json(savedCompany);
 };
@@ -41,7 +38,6 @@ const addCompanyRoles = async (req, res) => {
     params: { id: companyId },
   } = req;
   const cRoles = req.body.roles;
-  console.log("Hi");
   const saveRoles = async () => {
     var roleIDs = [];
     for (let role = 0; role < cRoles.length; role++) {
@@ -85,17 +81,7 @@ const getRoles = async (req, res) => {
   const companyRoles = await Company.findOne({ _id: companyId })
     .populate("roles")
     .exec();
-  console.log(companyRoles.roles);
-  // const companyRoles = company.roles.map(
-  //   async (roleId)=>{
-  //     const role = await Role.findById(roleId).then((data) => console.log(data))
-  //     return role
-
-  //   }
-  // )
-  //  console.log(companyRoles)
   res.status(StatusCodes.OK).json(companyRoles);
-  // const companyRoles = company.;
 };
 const getCompany = async (req, res) => {
   const {
@@ -138,20 +124,17 @@ const addResponseTypes = async (req, res) => {
 
 const getCompanyUseType = async (req, res) => {
   const { companyType: companyType } = req.query;
-  console.log(req.query);
   const companies = await Company.find({ response: companyType }).populate('roles').exec();
   res.status(StatusCodes.OK).json(companies);
 };
 
 const getCompanyCounts = async (req, res) => {
   const values = await Company.aggregate().sortByCount("response");
-  console.log(values);
   res.status(StatusCodes.OK).json(values);
 };
 
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  console.log(data);
   const companies = await Company.insertMany(data);
   res.status(StatusCodes.CREATED).json({ success: true });
 };

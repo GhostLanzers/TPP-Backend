@@ -49,7 +49,6 @@ const getAll = async (req, res) => {
 };
 const bulkUpdate = async (req, res) => {
   const query = req.body;
-  console.log(query[0].filter);
   const all = await Extra.bulkWrite(query);
   res.status(StatusCodes.OK).json(all);
 };
