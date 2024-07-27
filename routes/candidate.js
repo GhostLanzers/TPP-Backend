@@ -7,10 +7,6 @@ const {
   addCandidate,
   deleteCandidate,
   updateCandidate,
-  getInterviewStatusValues,
-  getSelectValues,
-  getL1AssessmentValues,
-  getL2AssessmentValues,
   getAssessmentCounts,
   bulkInsert,searchCandidate,getPotentialLeads,assignRecruiter,assignSearch
 } = require("../controllers/candidate");
@@ -21,10 +17,6 @@ router
   .get(getCandidate)
   .patch(updateCandidate)
   .delete(deleteCandidate);
-router.route("/values/interviewStatus").get(getInterviewStatusValues);
-router.route("/values/select").get(getSelectValues);
-router.route("/values/l1assessment").get(getL1AssessmentValues);
-router.route("/values/l2assessment").get(getL2AssessmentValues);
 router.route("/values/counts").get(getAssessmentCounts);
 router.route("/bulkinsert").post(bulkInsert)
 router.route("/search").post(searchCandidate)

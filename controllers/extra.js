@@ -8,7 +8,7 @@ const getLocations = async (req, res) => {
 const addLocations = async (req, res) => {
   const data = req.body;
 
-  const locations = await Extra.findByIdAndUpdate({ _id: "Locations" }, data);
+  const locations = await Extra.findByIdAndUpdate({ _id: "Locations" }, data,{new:true});
   res.status(StatusCodes.CREATED).json(locations);
 };
 const getSkills = async (req, res) => {
@@ -28,7 +28,9 @@ const getLanguages = async (req, res) => {
 const addLanguages = async (req, res) => {
   const data = req.body;
 
-  const skills = await Extra.findByIdAndUpdate({ _id: "Languages" }, data);
+  const skills = await Extra.findByIdAndUpdate({ _id: "Languages" }, data, {
+    new: true,
+  });
   res.status(StatusCodes.CREATED).json(skills);
 };
 const getQualifications = async (req, res) => {
@@ -39,7 +41,8 @@ const addQualifications = async (req, res) => {
   const data = req.body;
   const qualifications = await Extra.findByIdAndUpdate(
     { _id: "Qualifications" },
-    data
+    data,
+    { new: true }
   );
   res.status(StatusCodes.CREATED).json(qualifications);
 };

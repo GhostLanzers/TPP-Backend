@@ -107,20 +107,9 @@ const deleteCompany = async (req, res) => {
   await Company.deleteOne({ _id: company._id });
   res.status(StatusCodes.OK).json(company);
 };
-const getResponseTypes = async (req, res) => {
-  const responseTypes = Company.schema.path("response").enumValues;
-  res.status(StatusCodes.OK).json({ responseTypes: responseTypes });
-};
 
-const addResponseTypes = async (req, res) => {
-  const { value: newResponse } = req.body;
-  let responseTypes = Company.schema.path("response").enumValues;
-  responseTypes.push(newResponse);
-  Company.schema.path("response").enumValues = responseTypes;
-  res
-    .status(StatusCodes.OK)
-    .json({ responseTypes: Company.schema.path("response").enumValues });
-};
+
+
 
 const getCompanyUseType = async (req, res) => {
   const { companyType: companyType } = req.query;
@@ -173,8 +162,6 @@ module.exports = {
   getRoles,
   addCompanyRoles,
   deleteCompany,
-  getResponseTypes,
-  addResponseTypes,
   getCompanyUseType,
   getCompanyCounts,
   bulkInsert,

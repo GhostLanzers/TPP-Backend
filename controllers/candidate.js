@@ -11,12 +11,15 @@ const addCandidate = async (req, res) => {
 };
 
 const getAllCandidates = async (req, res) => {
+  
   const {
     l1Assessment: l1Assessment,
     l2Assessment: l2Assessment,
     select: select,
     interviewStatus: interviewStatus,
     awaiting: awaiting,
+    companyId: companyId,
+    roleId: roleId,
   } = req.query;
   var query = [];
   if (l1Assessment)
@@ -26,6 +29,7 @@ const getAllCandidates = async (req, res) => {
   if (select) query.push({ select: { $in: select.split(",") } });
   if (interviewStatus)
     query.push({ interviewStatus: { $in: interviewStatus.split(",") } });
+  
 
   if (query.length == 0) {
     query = {};
@@ -34,7 +38,22 @@ const getAllCandidates = async (req, res) => {
   } else {
     query = { $or: query };
   }
-  const candidates = await Candidate.find(query);
+  var candidates = await Candidate.find(query);
+  const access = ["Intern","Recruiter"].includes(req.user.employeeType)
+  if(companyId){
+    candidates = candidates.filter(
+      (c) => c.companyId == companyId
+    );
+  }
+  if (roleId) {
+    candidates = candidates.filter((c) => c.roleId == roleId);
+  }
+  if(access){
+    candidates = candidates.filter(
+      (c) => c.assignedEmployee == req.user.userid
+    );
+    
+  }
 
   res.status(StatusCodes.OK).json(candidates);
 };
@@ -80,27 +99,12 @@ const deleteCandidate = async (req, res) => {
   res.status(StatusCodes.OK).json(candidate);
 };
 
-const getInterviewStatusValues = async (req, res) => {
-  const values = Candidate.schema.path(
-    "application.interviewStatus"
-  ).enumValues;
-  res.status(StatusCodes.OK).json(values);
-};
 
-const getL2AssessmentValues = async (req, res) => {
-  const values = Candidate.schema.path("l2Assessment").enumValues;
-  res.status(StatusCodes.OK).json(values);
-};
 
-const getSelectValues = async (req, res) => {
-  const values = Candidate.schema.path("application.select").enumValues;
-  res.status(StatusCodes.OK).json(values);
-};
 
-const getL1AssessmentValues = async (req, res) => {
-  const values = Candidate.schema.path("l1Assessment").enumValues;
-  res.status(StatusCodes.OK).json(values);
-};
+
+
+
 
 const getAssessmentCounts = async (req, res) => {
   const l1values = await Candidate.aggregate().sortByCount("l1Assessment");
@@ -163,13 +167,13 @@ const getPotentialLeads = async (req, res) => {
   const { query: query, roleId: roleId, companyId: companyId } = req.body;
   const role = await Role.findById({ _id: roleId });
 
-  searchquery = {
-    "qualifications.qualification": { $in: role.qualification },
-    $or: [
+  searchquery = {$or:[{
+    "qualifications.qualification": { $in: role.qualification }},
+    {$or: [
       { currentCity: { $in: role.location } },
       { homeTown: { $in: role.location } },
-    ],
-    skills: { $in: role.skill },
+    ]},
+    {skills: { $in: role.skill }}]
   };
   if (query.length > 0) searchquery["$nor"] = query;
   const candidates = await Candidate.find(searchquery);
@@ -177,13 +181,13 @@ const getPotentialLeads = async (req, res) => {
 };
 
 const assignRecruiter = async (req, res) => {
-  const { list: list } = req.body;
+  const { list: list,companyId:companyId, roleId:roleId } = req.body;
   var candidates = [];
   list.forEach(({ emp, part }) => {
     part.forEach(async (_id) => {
       const candidate = await Candidate.findByIdAndUpdate(
         { _id: _id },
-        { assignedEmployee: emp }
+        { assignedEmployee: emp, companyId: companyId, roleId: roleId }
       );
       candidates.push(candidate);
     });
@@ -201,10 +205,6 @@ module.exports = {
   addCandidate,
   updateCandidate,
   deleteCandidate,
-  getInterviewStatusValues,
-  getL1AssessmentValues,
-  getL2AssessmentValues,
-  getSelectValues,
   getAssessmentCounts,
   bulkInsert,
   searchCandidate,

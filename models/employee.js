@@ -11,16 +11,7 @@ const employeeSchema = mongoose.Schema({
   email: String,
   employeeType: {
     type: String,
-    enum: {
-      values: [
-        "Recruiter",
-        "Teamlead",
-        "Manager",
-        "Intern",
-        "Business Development",
-        "Admin"
-      ],
-    },
+    
   },
   mobile: [String],
   parentMobile: String,

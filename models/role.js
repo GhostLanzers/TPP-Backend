@@ -17,10 +17,7 @@ const roleSchema = new mongoose.Schema({
   happens:String,
   processType: {
     type: String,
-    enum: {
-      values: ["International", "Domestic"],
-      message: "Not a valid process type",
-    },
+    
     default: "Domestic",
   },
   experience: {
@@ -65,10 +62,7 @@ const roleSchema = new mongoose.Schema({
   },
   period: {
     type: String,
-    enum: {
-      values: ["Permanent", "Contract", "Notice Period", "Buyout"],
-      message: "Not a valid period",
-    },
+    
     default: "Permanent",
   },
   otherDocs: {

@@ -40,18 +40,7 @@ const companySchema = new mongoose.Schema({
   },
   response: {
     type: String,
-    enum: {
-      values: [
-        "Empanelled",
-        "Need to Approach",
-        "In Process",
-        "Future",
-        "Not Intrested",
-        "Rejected",
-        "No Response",
-      ],
-      message: "Not a valid Response",
-    },
+    
     default: "No Response",
   },
   empanelled: {
