@@ -60,6 +60,7 @@ const roleSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  processWorkType:String,
   period: {
     type: String,
     

@@ -34,6 +34,7 @@ const companySchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  companyType:String,
   remarks: {
     type: String,
     default: "",
