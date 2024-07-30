@@ -1,5 +1,7 @@
 const { NotFoundError } = require("../errors/not-found");
+const company = require("../models/company");
 const Company = require("../models/company");
+const mongoose = require("mongoose");
 const Role = require("../models/role");
 const { StatusCodes } = require("http-status-codes");
 // const { BadRequestError, NotFoundError } = require('../errors')
@@ -108,7 +110,25 @@ const deleteCompany = async (req, res) => {
   res.status(StatusCodes.OK).json(company);
 };
 
-
+const deleteRole = async (req,res) => {
+  const {
+    params: { companyId: companyId, roleId: roleId },
+  } = req;
+  const company = await Company.findById({_id:companyId})
+  if(!company)
+    throw new NotFoundError("Company not found with given id");
+  const updateCompany = await Company.findByIdAndUpdate(
+    { _id: companyId },
+    {
+      ...company._doc,
+      roles: company._doc.roles.filter((r)=>r!=roleId)
+    }
+  );
+  const role = await Role.findByIdAndDelete({_id:roleId})
+  if(!role)
+    throw new NotFoundError("Role not found with given id");
+  res.status(StatusCodes.OK).json(company)
+} 
 
 
 const getCompanyUseType = async (req, res) => {
@@ -156,6 +176,26 @@ const updateRole = async (req, res) => {
   }
   res.status(StatusCodes.OK).json(role);
 };
+const editCompany = async (req,res) => {
+  const {
+    params: { id: companyId },
+  } = req;
+  const company = await Company.findById({_id:companyId})
+  var delrole= []
+  if(req.body.roles.length!=company.roles.length){
+    
+     delrole = company.roles.map((r)=>r.toString()).filter(
+      (ro) => !req.body.roles.includes(ro)
+    );
+    delrole.forEach(async (r) => {
+      const role = await Role.findByIdAndDelete(r);
+    });
+  }
+  const {roles,...rest} = req.body
+  
+  const upcompany = await Company.findByIdAndUpdate({ _id: companyId },{...rest,$pull:{roles:{$in:delrole}}},{new:true,runValidators:true});
+  res.status(StatusCodes.OK).json(upcompany)
+}
 module.exports = {
   getAllCompanies,
   addCompany,
@@ -167,5 +207,5 @@ module.exports = {
   bulkInsert,
   getCompany,
   getRole,
-  updateRole
+  updateRole,editCompany
 };

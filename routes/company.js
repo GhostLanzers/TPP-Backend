@@ -10,13 +10,13 @@ const {
   getCompanyUseType,
   getCompanyCounts,
   bulkInsert,
-  getCompany,getRole,updateRole
+  getCompany,getRole,updateRole,editCompany
 } = require("../controllers/company");
 
 router.route("/").get(getAllCompanies).post(addCompany);
 router.route("/:id/roles").get(getRoles);
 router.route("/:id").patch(addCompanyRoles).delete(deleteCompany);
-router.route("/company/:id").get(getCompany);
+router.route("/company/:id").get(getCompany).patch(editCompany);
 router.route("/companyType").get(getCompanyUseType);
 router.route("/counts").get(getCompanyCounts);
 router.route("/bulkinsert").post(bulkInsert);
