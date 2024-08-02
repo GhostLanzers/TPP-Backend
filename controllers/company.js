@@ -1,5 +1,5 @@
 const { NotFoundError } = require("../errors/not-found");
-const company = require("../models/company");
+const Candidate = require("../models/candidate");
 const Company = require("../models/company");
 const mongoose = require("mongoose");
 const Role = require("../models/role");
@@ -92,7 +92,80 @@ const getCompany = async (req, res) => {
   const company = await Company.findOne({ _id: companyId })
     .populate("roles")
     .exec();
-  res.status(StatusCodes.OK).json(company);
+    const uproles = await Promise.all(
+      company.roles.map(async (company) => {
+        const inProcess = await Candidate.find({
+          interviewStatus: {
+            $in: [
+              "TPP Venue",
+              "Client Venue",
+              "Virtual Interview",
+              "Pending FSR",
+              "Pending Amcat",
+              "Pending Versant",
+              "Pending Technical",
+              "Pending Typing",
+              "Pending Group Discussion",
+              "Pending Ops/Client",
+              "Pending Vice President",
+            ],
+          },
+          roleId: company._id,
+        });
+        const rejected = await Candidate.find({
+          interviewStatus: {
+            $in: [
+              "Reject FSR Communication",
+              "Reject FSR Stability",
+              "Reject FSR Domain",
+              "Reject Amcat",
+              "Reject Amcat – Technical Issue",
+              "Reject Amcat Cooling Period",
+              "Reject Versant",
+              "Reject Versant – Technical Issue",
+              "Reject Versant Cooling Period",
+              "Reject Technical",
+              "Reject Typing",
+              "Reject Group Discussion",
+              "Reject Ops/Client Communication",
+              "Reject Ops/Client Stability",
+              "Reject Ops/Client Domain",
+              "Reject Vice President",
+            ],
+          },
+          roleId: company._id,
+        });
+        const awaiting = await Candidate.find({
+          interviewStatus: {
+            $in: ["Select"],
+          },
+          roleId: company._id,
+        });
+        const offerDrop = await Candidate.find({
+          interviewStatus: {
+            $in: ["Offer Drop"],
+          },
+          roleId: company._id,
+        });
+        const joined = await Candidate.find({
+          select: {
+            $in: ["Tracking", "Non tenure", "Need to Bill", "Billed"],
+          },
+          roleId: company._id,
+        });
+
+        return {
+          ...company._doc,
+          inProcess: inProcess.length,
+          awaiting: awaiting.length,
+          offerDrop: offerDrop.length,
+          joined: joined.length,
+          rejected: rejected.length,
+        };
+      })
+    );
+  
+  res.status(StatusCodes.OK).json({...company._doc,roles:uproles});
 };
 const deleteCompany = async (req, res) => {
   const {
@@ -110,31 +183,100 @@ const deleteCompany = async (req, res) => {
   res.status(StatusCodes.OK).json(company);
 };
 
-const deleteRole = async (req,res) => {
+const deleteRole = async (req, res) => {
   const {
     params: { companyId: companyId, roleId: roleId },
   } = req;
-  const company = await Company.findById({_id:companyId})
-  if(!company)
-    throw new NotFoundError("Company not found with given id");
+  const company = await Company.findById({ _id: companyId });
+  if (!company) throw new NotFoundError("Company not found with given id");
   const updateCompany = await Company.findByIdAndUpdate(
     { _id: companyId },
     {
       ...company._doc,
-      roles: company._doc.roles.filter((r)=>r!=roleId)
+      roles: company._doc.roles.filter((r) => r != roleId),
     }
   );
-  const role = await Role.findByIdAndDelete({_id:roleId})
-  if(!role)
-    throw new NotFoundError("Role not found with given id");
-  res.status(StatusCodes.OK).json(company)
-} 
-
+  const role = await Role.findByIdAndDelete({ _id: roleId });
+  if (!role) throw new NotFoundError("Role not found with given id");
+  res.status(StatusCodes.OK).json(company);
+};
 
 const getCompanyUseType = async (req, res) => {
   const { companyType: companyType } = req.query;
-  const companies = await Company.find({ response: companyType }).populate('roles').exec();
-  res.status(StatusCodes.OK).json(companies);
+  const companies = await Company.find({ response: companyType })
+    .populate("roles")
+    .exec();
+  const upcompanies = await Promise.all(companies.map(async (company) => {
+    const inProcess = await Candidate.find({
+      interviewStatus: {
+        $in: [
+          "TPP Venue",
+          "Client Venue",
+          "Virtual Interview",
+          "Pending FSR",
+          "Pending Amcat",
+          "Pending Versant",
+          "Pending Technical",
+          "Pending Typing",
+          "Pending Group Discussion",
+          "Pending Ops/Client",
+          "Pending Vice President",
+        ],
+      },
+      companyId: company._id,
+    });
+    const rejected = await Candidate.find({
+      interviewStatus: {
+        $in: [
+          "Reject FSR Communication",
+          "Reject FSR Stability",
+          "Reject FSR Domain",
+          "Reject Amcat",
+          "Reject Amcat – Technical Issue",
+          "Reject Amcat Cooling Period",
+          "Reject Versant",
+          "Reject Versant – Technical Issue",
+          "Reject Versant Cooling Period",
+          "Reject Technical",
+          "Reject Typing",
+          "Reject Group Discussion",
+          "Reject Ops/Client Communication",
+          "Reject Ops/Client Stability",
+          "Reject Ops/Client Domain",
+          "Reject Vice President",
+        ],
+      },
+      companyId: company._id,
+    });
+    const awaiting = await Candidate.find({
+      interviewStatus: {
+        $in: ["Select"],
+      },
+      companyId: company._id,
+    });
+    const offerDrop = await Candidate.find({
+      interviewStatus: {
+        $in: ["Offer Drop"],
+      },
+      companyId: company._id,
+    });
+    const joined = await Candidate.find({
+      select: {
+        $in: ["Tracking", "Non tenure", "Need to Bill", "Billed"],
+      },
+      companyId: company._id,
+    });
+
+    return {
+      ...company._doc,
+      inProcess: inProcess.length,
+      awaiting: awaiting.length,
+      offerDrop: offerDrop.length,
+      joined: joined.length,
+      rejected: rejected.length,
+    };
+  }));
+  res.status(StatusCodes.OK).json(upcompanies);
 };
 
 const getCompanyCounts = async (req, res) => {
@@ -169,33 +311,36 @@ const updateRole = async (req, res) => {
   if (!company) {
     throw new NotFoundError("Company not found with given id");
   }
-  const data = req.body
-  const role = await Role.findByIdAndUpdate({ _id: roleId },{...data});
+  const data = req.body;
+  const role = await Role.findByIdAndUpdate({ _id: roleId }, { ...data });
   if (!role) {
     throw new NotFoundError("Role not found with given id");
   }
   res.status(StatusCodes.OK).json(role);
 };
-const editCompany = async (req,res) => {
+const editCompany = async (req, res) => {
   const {
     params: { id: companyId },
   } = req;
-  const company = await Company.findById({_id:companyId})
-  var delrole= []
-  if(req.body.roles.length!=company.roles.length){
-    
-     delrole = company.roles.map((r)=>r.toString()).filter(
-      (ro) => !req.body.roles.includes(ro)
-    );
+  const company = await Company.findById({ _id: companyId });
+  var delrole = [];
+  if (req.body.roles.length != company.roles.length) {
+    delrole = company.roles
+      .map((r) => r.toString())
+      .filter((ro) => !req.body.roles.includes(ro));
     delrole.forEach(async (r) => {
       const role = await Role.findByIdAndDelete(r);
     });
   }
-  const {roles,...rest} = req.body
-  
-  const upcompany = await Company.findByIdAndUpdate({ _id: companyId },{...rest,$pull:{roles:{$in:delrole}}},{new:true,runValidators:true});
-  res.status(StatusCodes.OK).json(upcompany)
-}
+  const { roles, ...rest } = req.body;
+
+  const upcompany = await Company.findByIdAndUpdate(
+    { _id: companyId },
+    { ...rest, $pull: { roles: { $in: delrole } } },
+    { new: true, runValidators: true }
+  );
+  res.status(StatusCodes.OK).json(upcompany);
+};
 module.exports = {
   getAllCompanies,
   addCompany,
@@ -207,5 +352,6 @@ module.exports = {
   bulkInsert,
   getCompany,
   getRole,
-  updateRole,editCompany
+  updateRole,
+  editCompany,
 };

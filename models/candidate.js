@@ -16,6 +16,7 @@ const candidateSchema = mongoose.Schema({
   homeTown: {
     type:String
   },
+  rate:Number,
   currentCity: {
     type:String
   },
@@ -35,7 +36,7 @@ const candidateSchema = mongoose.Schema({
         level: {
           type: String,
           
-          default: "Beginner",
+          default: "Poor",
         },
       },
     ],

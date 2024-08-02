@@ -8,7 +8,7 @@ const {
   deleteCandidate,
   updateCandidate,
   getAssessmentCounts,
-  bulkInsert,searchCandidate,getPotentialLeads,assignRecruiter,assignSearch
+  bulkInsert,searchCandidate,getPotentialLeads,assignRecruiter,assignSearch,checkNumber
 } = require("../controllers/candidate");
 
 router.route("/").get(getAllCandidates).post(addCandidate);
@@ -23,5 +23,5 @@ router.route("/search").post(searchCandidate)
 router.route("/candidate/potentialleads").post(getPotentialLeads)
 router.route("/candidate/assign").post(assignRecruiter).get(assignSearch)
 router.route("/candidate/assignSearch").post(assignSearch);
-
+router.route('/mobile/:number').get(checkNumber)
 module.exports = router;

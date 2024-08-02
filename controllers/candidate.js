@@ -33,11 +33,13 @@ const getAllCandidates = async (req, res) => {
 
   if (query.length == 0) {
     query = {};
-  } else if (awaiting) {
-    query = { l1Assessment: ["GOOD", "TAC"], l2Assessment: null };
   } else {
     query = { $or: query };
   }
+  if (awaiting) {
+    console.log("HI");
+    query = { l1Assessment: ["GOOD", "TAC"], l2Assessment: null };
+  } 
   var candidates = await Candidate.find(query);
   const access = ["Intern","Recruiter"].includes(req.user.employeeType)
   if(companyId){
@@ -198,6 +200,23 @@ const assignSearch = async (req,res) =>{
   const candidates = await Candidate.find({...req.body.query})
   res.status(StatusCodes.OK).json({candidates})
 }
+const checkNumber = async (req,res) => {
+const { number: number } = req.params;
+const candidate = await Candidate.find({
+  mobile:{$in:[number]}
+});
+const status = true
+if (!candidate) status=false
+res.status(StatusCodes.OK).json(status);
+}
+const getCompanyRoleCounts = async (req,res) =>{
+  const {
+    interviewStatus: interviewStatus,
+    companyId: companyId,
+    roleID: roleID,
+  } = req.body;
+    
+}
 
 module.exports = {
   getAllCandidates,
@@ -210,5 +229,6 @@ module.exports = {
   searchCandidate,
   getPotentialLeads,
   assignRecruiter,
-  assignSearch
+  assignSearch,
+  checkNumber
 };

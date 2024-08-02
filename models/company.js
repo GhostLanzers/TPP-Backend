@@ -16,7 +16,7 @@ const companySchema = new mongoose.Schema({
     type: [String],
     validate: [
       (value) => {
-        return value.length <= 10;
+        return value.length == 10;
       },
       "Cannot have more than 10 Mobile Numbers",
     ],
