@@ -40,7 +40,7 @@ const getAllCandidates = async (req, res) => {
     console.log("HI");
     query = { l1Assessment: ["GOOD", "TAC"], l2Assessment: null };
   } 
-  var candidates = await Candidate.find(query);
+  var candidates = await Candidate.find(query).populate("companyId").populate("roleId").exec();
   const access = ["Intern","Recruiter"].includes(req.user.employeeType)
   if(companyId){
     candidates = candidates.filter(
