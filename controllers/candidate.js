@@ -11,7 +11,6 @@ const addCandidate = async (req, res) => {
 };
 
 const getAllCandidates = async (req, res) => {
-  
   const {
     l1Assessment: l1Assessment,
     l2Assessment: l2Assessment,
@@ -29,7 +28,6 @@ const getAllCandidates = async (req, res) => {
   if (select) query.push({ select: { $in: select.split(",") } });
   if (interviewStatus)
     query.push({ interviewStatus: { $in: interviewStatus.split(",") } });
-  
 
   if (query.length == 0) {
     query = {};
@@ -37,24 +35,23 @@ const getAllCandidates = async (req, res) => {
     query = { $or: query };
   }
   if (awaiting) {
-    console.log("HI");
     query = { l1Assessment: ["GOOD", "TAC"], l2Assessment: null };
-  } 
-  var candidates = await Candidate.find(query).populate("companyId").populate("roleId").exec();
-  const access = ["Intern","Recruiter"].includes(req.user.employeeType)
-  if(companyId){
-    candidates = candidates.filter(
-      (c) => c.companyId == companyId
-    );
+  }
+  var candidates = await Candidate.find(query)
+    .populate("companyId")
+    .populate("roleId")
+    .exec();
+  const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
+  if (companyId) {
+    candidates = candidates.filter((c) => c.companyId == companyId);
   }
   if (roleId) {
     candidates = candidates.filter((c) => c.roleId == roleId);
   }
-  if(access){
+  if (access) {
     candidates = candidates.filter(
       (c) => c.assignedEmployee == req.user.userid
     );
-    
   }
 
   res.status(StatusCodes.OK).json(candidates);
@@ -101,13 +98,6 @@ const deleteCandidate = async (req, res) => {
   res.status(StatusCodes.OK).json(candidate);
 };
 
-
-
-
-
-
-
-
 const getAssessmentCounts = async (req, res) => {
   const l1values = await Candidate.aggregate().sortByCount("l1Assessment");
   const l2values = await Candidate.aggregate().sortByCount("l2Assessment");
@@ -135,18 +125,16 @@ const getAssessmentCounts = async (req, res) => {
   }
   const allCandidate = await Candidate.find({});
   const allCompany = await Company.find({});
- 
-  res
-    .status(StatusCodes.OK)
-    .json({
-      l1data,
-      l2data,
-      interdata,
-      selectData,
-      awaiting: awaiting.length,
-      allCompany: allCompany.length,
-      allCandidate: allCandidate.length,
-    });
+
+  res.status(StatusCodes.OK).json({
+    l1data,
+    l2data,
+    interdata,
+    selectData,
+    awaiting: awaiting.length,
+    allCompany: allCompany.length,
+    allCandidate: allCandidate.length,
+  });
 };
 
 const bulkInsert = async (req, res) => {
@@ -158,9 +146,9 @@ const bulkInsert = async (req, res) => {
 const searchCandidate = async (req, res) => {
   const { name: name, mobile: mobile, email: email } = req.body;
   query = [];
-  if (name) query.push({ fullName: { $regex: ".*" + name + ".*" } });
-  if (mobile) query.push({ mobile: { $in: mobile } });
-  if (email) query.push({ email: { $in: email } });
+  if (name) query.push({ fullName: { $regex: ".*" + name + ".*", $options: "i" } });
+  if (mobile) query.push({ mobile: { $regex: ".*" + mobile + ".*", $options: "i" } });
+  if (email) query.push({ email: { $regex: ".*" + email + ".*", $options: "i" } });
   const candidates = await Candidate.find({ $or: query });
 
   res.status(StatusCodes.OK).json(candidates);
@@ -169,13 +157,19 @@ const getPotentialLeads = async (req, res) => {
   const { query: query, roleId: roleId, companyId: companyId } = req.body;
   const role = await Role.findById({ _id: roleId });
 
-  searchquery = {$or:[{
-    "qualifications.qualification": { $in: role.qualification }},
-    {$or: [
-      { currentCity: { $in: role.location } },
-      { homeTown: { $in: role.location } },
-    ]},
-    {skills: { $in: role.skill }}]
+  searchquery = {
+    $or: [
+      {
+        "qualifications.qualification": { $in: role.qualification },
+      },
+      {
+        $or: [
+          { currentCity: { $in: role.location } },
+          { homeTown: { $in: role.location } },
+        ],
+      },
+      { skills: { $in: role.skill } },
+    ],
   };
   if (query.length > 0) searchquery["$nor"] = query;
   const candidates = await Candidate.find(searchquery);
@@ -183,7 +177,7 @@ const getPotentialLeads = async (req, res) => {
 };
 
 const assignRecruiter = async (req, res) => {
-  const { list: list,companyId:companyId, roleId:roleId } = req.body;
+  const { list: list, companyId: companyId, roleId: roleId } = req.body;
   var candidates = [];
   list.forEach(({ emp, part }) => {
     part.forEach(async (_id) => {
@@ -196,27 +190,31 @@ const assignRecruiter = async (req, res) => {
   });
   res.status(StatusCodes.OK).json(candidates);
 };
-const assignSearch = async (req,res) =>{
-  const candidates = await Candidate.find({...req.body.query})
-  res.status(StatusCodes.OK).json({candidates})
-}
-const checkNumber = async (req,res) => {
-const { number: number } = req.params;
-const candidate = await Candidate.find({
-  mobile:{$in:[number]}
-});
-const status = true
-if (!candidate) status=false
-res.status(StatusCodes.OK).json(status);
-}
-const getCompanyRoleCounts = async (req,res) =>{
+const assignSearch = async (req, res) => {
+  const candidates = await Candidate.find({ ...req.body.query });
+  res.status(StatusCodes.OK).json({ candidates });
+};
+const checkNumber = async (req, res) => {
+  const { number: number } = req.params;
+
+  const candidate = await Candidate.find({
+    mobile: String(number),
+  });
+  var status = true;
+
+  if (candidate.length == 0) {
+    status = false;
+  }
+
+  res.status(StatusCodes.OK).json({ status });
+};
+const getCompanyRoleCounts = async (req, res) => {
   const {
     interviewStatus: interviewStatus,
     companyId: companyId,
     roleID: roleID,
   } = req.body;
-    
-}
+};
 
 module.exports = {
   getAllCandidates,
@@ -230,5 +228,5 @@ module.exports = {
   getPotentialLeads,
   assignRecruiter,
   assignSearch,
-  checkNumber
+  checkNumber,
 };
