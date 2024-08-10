@@ -10,7 +10,10 @@ const {
   bulkInsert,
   getEmployeeCounts,
   getEmployeesByType,
-  updatePassword
+  updatePassword,
+  checkId,
+  checkNumber,
+  checkMail
 } = require("../controllers/employee");
 
 router.route("/").get(getAllEmployees).post(addEmployee);
@@ -23,5 +26,7 @@ router
   router.route("/counts/counts").get(getEmployeeCounts)
   router.route("/employeeType/:type").get(getEmployeesByType)
   router.route("/:id/password").patch(updatePassword)
-
+router.route("/id/:id").get(checkId);
+router.route("/mobile/:number").get(checkNumber);
+router.route("/mail/:email").get(checkMail);
 module.exports = router;

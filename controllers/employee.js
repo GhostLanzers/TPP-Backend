@@ -64,6 +64,8 @@ const updateEmployee = async (req, res) => {
 };
 const bulkInsert = async (req, res) => {
   const data = req.body;
+  console.log(data);
+  
   const employees = await Employee.insertMany(data);
   res.status(StatusCodes.CREATED).json({ success: true });
 };
@@ -104,6 +106,48 @@ const updatePassword = async (req, res) => {
   res.status(StatusCodes.OK).json({ employee,new:req.body.new });
 };
 
+const checkId = async (req,res) => {
+  const { id: employeeId } = req.params;
+
+  const employee = await Employee.find({
+    employeeId: employeeId,
+  });
+  var status = true;
+
+  if (employee.length == 0) {
+    status = false;
+  }
+
+  res.status(StatusCodes.OK).json({ status });
+}
+const checkNumber = async (req, res) => {
+  const { number: number } = req.params;
+
+  const candidate = await Employee.find({
+    mobile: String(number),
+  });
+  var status = true;
+
+  if (candidate.length == 0) {
+    status = false;
+  }
+
+  res.status(StatusCodes.OK).json({ status });
+};
+const checkMail = async (req, res) => {
+  const { email: email } = req.params;
+
+  const candidate = await Employee.find({
+    email: email,
+  });
+  var status = true;
+
+  if (candidate.length == 0) {
+    status = false;
+  }
+
+  res.status(StatusCodes.OK).json({ status });
+};
 module.exports = {
   getAllEmployees,
   getEmployee,
@@ -113,5 +157,8 @@ module.exports = {
   bulkInsert,
   getEmployeeCounts,
   getEmployeesByType,
-  updatePassword
+  updatePassword,
+  checkId,
+  checkNumber,
+  checkMail
 };

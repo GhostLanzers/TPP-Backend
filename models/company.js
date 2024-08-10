@@ -20,6 +20,7 @@ const companySchema = new mongoose.Schema({
       },
       "Cannot have more than 10 Mobile Numbers",
     ],
+   unique:true
   },
   HREmail: {
     type: String,

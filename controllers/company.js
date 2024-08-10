@@ -203,7 +203,10 @@ const deleteRole = async (req, res) => {
 
 const getCompanyUseType = async (req, res) => {
   const { companyType: companyType } = req.query;
-  const companies = await Company.find({ response: companyType })
+  var query = { response: companyType };
+  if(!companyType)
+    query = {}
+  const companies = await Company.find(query)
     .populate("roles")
     .exec();
   const upcompanies = await Promise.all(companies.map(async (company) => {

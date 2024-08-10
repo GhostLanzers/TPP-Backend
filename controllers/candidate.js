@@ -40,13 +40,16 @@ const getAllCandidates = async (req, res) => {
   var candidates = await Candidate.find(query)
     .populate("companyId")
     .populate("roleId")
+    .populate("assignedEmployee")
+    .populate("createdByEmployee")
     .exec();
+  
   const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
   if (companyId) {
-    candidates = candidates.filter((c) => c.companyId == companyId);
+    candidates = candidates.filter((c) => String(c.companyId?._id) == companyId);
   }
   if (roleId) {
-    candidates = candidates.filter((c) => c.roleId == roleId);
+    candidates = candidates.filter((c) => String(c.roleId?._id) == roleId);
   }
   if (access) {
     candidates = candidates.filter(
@@ -172,7 +175,10 @@ const getPotentialLeads = async (req, res) => {
     ],
   };
   if (query.length > 0) searchquery["$nor"] = query;
-  const candidates = await Candidate.find(searchquery);
+  const candidates = await Candidate.find(searchquery)
+    .populate("assignedEmployee")
+    .populate("createdByEmployee")
+    .exec();;
   res.status(StatusCodes.OK).json(candidates);
 };
 
@@ -191,7 +197,10 @@ const assignRecruiter = async (req, res) => {
   res.status(StatusCodes.OK).json(candidates);
 };
 const assignSearch = async (req, res) => {
-  const candidates = await Candidate.find({ ...req.body.query });
+  const candidates = await Candidate.find({ ...req.body.query })
+    .populate("assignedEmployee")
+    .populate("createdByEmployee")
+    .exec();;
   res.status(StatusCodes.OK).json({ candidates });
 };
 const checkNumber = async (req, res) => {

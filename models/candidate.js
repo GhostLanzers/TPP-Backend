@@ -14,11 +14,11 @@ const candidateSchema = mongoose.Schema({
   email: [String],
   candidateId: String,
   homeTown: {
-    type:String
+    type: String,
   },
-  rate:Number,
+  rate: Number,
   currentCity: {
-    type:String
+    type: String,
   },
   qualifications: {
     type: [
@@ -32,10 +32,10 @@ const candidateSchema = mongoose.Schema({
     type: [
       {
         language: String,
-        remarks:String,
+        remarks: String,
         level: {
           type: String,
-          
+
           default: "Poor",
         },
       },
@@ -67,11 +67,10 @@ const candidateSchema = mongoose.Schema({
   remarks: String,
   interviewStatus: {
     type: String,
-    
   },
   select: {
     type: String,
-    
+
     required: [
       function () {
         return this.interviewStatus == "Select";
@@ -89,13 +88,15 @@ const candidateSchema = mongoose.Schema({
 
   l1Assessment: {
     type: String,
-  
   },
   l2Assessment: {
     type: String,
-    
   },
   assignedEmployee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee",
+  },
+  createdByEmployee: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employee",
   },
