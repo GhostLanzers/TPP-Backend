@@ -502,7 +502,13 @@ const getAllByClass = async (req, res) => {
   } else if (type === "all") {
     query = {};
   }
-  var candidates = await Candidate.find(query);
+  var candidates = await Candidate.find(query)
+    .populate("companyId")
+    .populate("roleId")
+    .populate("assignedEmployee")
+    .populate("createdByEmployee")
+    .exec();
+;
   const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
   if (companyId) {
     candidates = candidates.filter(
