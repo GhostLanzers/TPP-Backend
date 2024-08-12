@@ -39,6 +39,7 @@ employeeSchema.pre("save", function (next) {
     var doc = this;
 
     if (!doc.password) doc.password = "TPP@Pass";
+    next();
   } else {
     next();
   }

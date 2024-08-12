@@ -19,7 +19,7 @@ const errorHandlerMiddleware = (err, req, res, next) => {
     customError.success = false;
   }
   if (err.code && err.code === 11000) {
-    customError.message = err.message;
+    customError.message = "Duplicates Exists / Uniquie value is NULL";
     customError.statusCode = 400;
     customError.success = false;
   }

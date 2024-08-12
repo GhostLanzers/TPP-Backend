@@ -41,8 +41,7 @@ const companySchema = new mongoose.Schema({
     default: "",
   },
   response: {
-    type: String,
-    
+    type: String,    
     default: "No Response",
   },
   empanelled: {
