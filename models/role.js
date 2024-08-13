@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Counter = require("./count");
+const { optional } = require("joi");
 const roleSchema = new mongoose.Schema({
   roleId: String,
   status: {
@@ -24,7 +25,11 @@ const roleSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  skill: {
+  mandatorySkills: {
+    type: [String],
+    default: [],
+  },
+  optionalSkills: {
     type: [String],
     default: [],
   },

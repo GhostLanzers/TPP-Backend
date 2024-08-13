@@ -286,7 +286,7 @@ const getAssessmentCounts = async (req, res) => {
 
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  const employees = await Candidate.insertMany(data);
+  const employees = await Candidate.insertMany(data, { ordered: false });
   res.status(StatusCodes.CREATED).json({ success: true });
 };
 
@@ -306,22 +306,32 @@ const searchCandidate = async (req, res) => {
 const getPotentialLeads = async (req, res) => {
   const { query: query, roleId: roleId, companyId: companyId } = req.body;
   const role = await Role.findById({ _id: roleId });
-
-  searchquery = {
-    $or: [
-      {
+  var searchquery = {
+    
         "qualifications.qualification": { $in: role.qualification },
-      },
-      {
+     
         $or: [
           { currentCity: { $in: role.location } },
           { homeTown: { $in: role.location } },
         ],
-      },
-      { skills: { $in: role.skill } },
-    ],
+     
+      
+    
   };
+  if (role.mandatorySkills.length > 0 && role.optionalSkills.length>0){
+    searchquery["skills"] =  { $all: [...role.mandatorySkills] ,$in:[...role.optionalSkills]}
+  }
+  else if (role.mandatorySkills.length > 0)
+    searchquery["skills"] = {
+      $all: [...role.mandatorySkills]
+    };
+  else if (role.optionalSkills.length > 0)
+    searchquery["skills"] = {
+      
+      $in: [...role.optionalSkills],
+    };
   if (query.length > 0) searchquery["$nor"] = query;
+  
   const candidates = await Candidate.find(searchquery)
     .populate("assignedEmployee")
     .populate("createdByEmployee")

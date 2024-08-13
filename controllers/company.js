@@ -289,7 +289,7 @@ const getCompanyCounts = async (req, res) => {
 
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  const companies = await Company.insertMany(data);
+  const companies = await Company.insertMany(data,{ordered:false});
   res.status(StatusCodes.CREATED).json({ success: true });
 };
 const getRole = async (req, res) => {
