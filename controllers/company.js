@@ -269,14 +269,34 @@ const getCompanyUseType = async (req, res) => {
       },
       companyId: company._id,
     });
-
+    const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
+    if(!access)
+      return {
+        ...company._doc,
+        inProcess: inProcess.length,
+        awaiting: awaiting.length,
+        offerDrop: offerDrop.length,
+        joined: joined.length,
+        rejected: rejected.length,
+      };
+    else
     return {
       ...company._doc,
-      inProcess: inProcess.length,
-      awaiting: awaiting.length,
-      offerDrop: offerDrop.length,
-      joined: joined.length,
-      rejected: rejected.length,
+      inProcess: inProcess.filter(
+        (candidate) => String(candidate.assignedEmployee) === req.user.userid
+      ).length,
+      awaiting: awaiting.filter(
+        (candidate) => String(candidate.assignedEmployee) === req.user.userid
+      ).length,
+      offerDrop: offerDrop.filter(
+        (candidate) => String(candidate.assignedEmployee) === req.user.userid
+      ).length,
+      joined: joined.filter(
+        (candidate) => String(candidate.assignedEmployee) === req.user.userid
+      ).length,
+      rejected: rejected.filter(
+        (candidate) => String(candidate.assignedEmployee) === req.user.userid
+      ) .length,
     };
   }));
   res.status(StatusCodes.OK).json(upcompanies);

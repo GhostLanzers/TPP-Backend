@@ -270,7 +270,14 @@ const getAssessmentCounts = async (req, res) => {
         query = {};
       }
       var candidates = await Candidate.find(query);
-      final[type] = candidates.length;
+      const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
+      
+      if(!access)
+        final[type] = candidates.length;
+      else
+        final[type] = candidates.filter(
+          (candidate) => String(candidate.assignedEmployee) === req.user.userid
+        ).length;
 
       return { type: candidates.length };
     })
@@ -307,31 +314,28 @@ const getPotentialLeads = async (req, res) => {
   const { query: query, roleId: roleId, companyId: companyId } = req.body;
   const role = await Role.findById({ _id: roleId });
   var searchquery = {
-    
-        "qualifications.qualification": { $in: role.qualification },
-     
-        $or: [
-          { currentCity: { $in: role.location } },
-          { homeTown: { $in: role.location } },
-        ],
-     
-      
-    
+    "qualifications.qualification": { $in: role.qualification },
+
+    $or: [
+      { currentCity: { $in: role.location } },
+      { homeTown: { $in: role.location } },
+    ],
   };
-  if (role.mandatorySkills.length > 0 && role.optionalSkills.length>0){
-    searchquery["skills"] =  { $all: [...role.mandatorySkills] ,$in:[...role.optionalSkills]}
-  }
-  else if (role.mandatorySkills.length > 0)
+  if (role.mandatorySkills.length > 0 && role.optionalSkills.length > 0) {
     searchquery["skills"] = {
-      $all: [...role.mandatorySkills]
+      $all: [...role.mandatorySkills],
+      $in: [...role.optionalSkills],
+    };
+  } else if (role.mandatorySkills.length > 0)
+    searchquery["skills"] = {
+      $all: [...role.mandatorySkills],
     };
   else if (role.optionalSkills.length > 0)
     searchquery["skills"] = {
-      
       $in: [...role.optionalSkills],
     };
   if (query.length > 0) searchquery["$nor"] = query;
-  
+
   const candidates = await Candidate.find(searchquery)
     .populate("assignedEmployee")
     .populate("createdByEmployee")
@@ -518,7 +522,6 @@ const getAllByClass = async (req, res) => {
     .populate("assignedEmployee")
     .populate("createdByEmployee")
     .exec();
-;
   const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
   if (companyId) {
     candidates = candidates.filter(
@@ -530,7 +533,7 @@ const getAllByClass = async (req, res) => {
   }
   if (access) {
     candidates = candidates.filter(
-      (c) => c.assignedEmployee == req.user.userid
+      (c) => c.assignedEmployee._doc._id == req.user.userid
     );
   }
 
