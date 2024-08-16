@@ -271,9 +271,8 @@ const getAssessmentCounts = async (req, res) => {
       }
       var candidates = await Candidate.find(query);
       const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
-      
-      if(!access)
-        final[type] = candidates.length;
+
+      if (!access) final[type] = candidates.length;
       else
         final[type] = candidates.filter(
           (candidate) => String(candidate.assignedEmployee) === req.user.userid
@@ -293,7 +292,10 @@ const getAssessmentCounts = async (req, res) => {
 
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  const employees = await Candidate.insertMany(data, { ordered: false });
+  const employees = await Candidate.insertMany(data, {
+    ordered: false,
+    rawResult: true,
+  });
   res.status(StatusCodes.CREATED).json({ success: true });
 };
 
@@ -382,7 +384,7 @@ const getCompanyRoleCounts = async (req, res) => {
   const {
     interviewStatus: interviewStatus,
     companyId: companyId,
-    roleID: roleID,
+    roleId: roleID,
   } = req.body;
 };
 const getAllByClass = async (req, res) => {
@@ -456,6 +458,15 @@ const getAllByClass = async (req, res) => {
       },
       select: { $in: ["", null] },
     };
+  } else if (type === "CompanyInterviewScheduled") {
+    query = {
+      interviewStatus: {
+        $in: "TPP Venue,Client Venue,Virtual Interview,Pending FSR,Pending Amcat,Pending Versant,Pending Technical,Pending Typing,Pending Group Discussion,Pending Ops/Client,Pending Vice President".split(
+          ","
+        ),
+      },
+      select: { $in: ["", null] },
+    };
   } else if (type === "Rejects") {
     query = {
       interviewStatus: {
@@ -511,7 +522,9 @@ const getAllByClass = async (req, res) => {
     };
   } else if (type === "joined") {
     query = {
-      select: { $in: "Tracking,Non tenure,Need to Bill,Billed".split(",") },
+      select: {
+        $in: ["Tracking", "Non tenure", "Need to Bill", "Billed"],
+      },
     };
   } else if (type === "all") {
     query = {};
@@ -529,11 +542,11 @@ const getAllByClass = async (req, res) => {
     );
   }
   if (roleId) {
-    candidates = candidates.filter((c) => String(c.roleId?._id) == roleId);
+    candidates = candidates.filter((c) => String(c.roleId?._id) === roleId);
   }
   if (access) {
     candidates = candidates.filter(
-      (c) => c.assignedEmployee._doc._id == req.user.userid
+      (c) => c.assignedEmployee?._id == req.user.userid
     );
   }
 

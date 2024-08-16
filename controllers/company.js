@@ -93,7 +93,7 @@ const getCompany = async (req, res) => {
     .populate("roles")
     .exec();
     const uproles = await Promise.all(
-      company.roles.map(async (company) => {
+      company.roles.map(async (role) => {
         const inProcess = await Candidate.find({
           interviewStatus: {
             $in: [
@@ -110,7 +110,8 @@ const getCompany = async (req, res) => {
               "Pending Vice President",
             ],
           },
-          roleId: company._id,
+          select: { $in: ["", null] },
+          roleId: role._id,
         });
         const rejected = await Candidate.find({
           interviewStatus: {
@@ -133,35 +134,63 @@ const getCompany = async (req, res) => {
               "Reject Vice President",
             ],
           },
-          roleId: company._id,
+          select: { $in: ["", null] },
+          roleId: role._id,
         });
         const awaiting = await Candidate.find({
           interviewStatus: {
             $in: ["Select"],
           },
-          roleId: company._id,
+          select: { $in: ["", null] },
+          roleId: role._id,
         });
         const offerDrop = await Candidate.find({
           interviewStatus: {
             $in: ["Offer Drop"],
           },
-          roleId: company._id,
+          select: { $in: ["", null] },
+          roleId: role._id,
         });
         const joined = await Candidate.find({
           select: {
             $in: ["Tracking", "Non tenure", "Need to Bill", "Billed"],
           },
-          roleId: company._id,
+          roleId: role._id,
         });
-
-        return {
-          ...company._doc,
-          inProcess: inProcess.length,
-          awaiting: awaiting.length,
-          offerDrop: offerDrop.length,
-          joined: joined.length,
-          rejected: rejected.length,
-        };
+        const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
+        if (!access)
+          return {
+            ...role._doc,
+            inProcess: inProcess.length,
+            awaiting: awaiting.length,
+            offerDrop: offerDrop.length,
+            joined: joined.length,
+            rejected: rejected.length,
+          };
+        else
+          return {
+            ...role._doc,
+            inProcess: inProcess.filter(
+              (candidate) =>
+                String(candidate.assignedEmployee) === req.user.userid
+            ).length,
+            awaiting: awaiting.filter(
+              (candidate) =>
+                String(candidate.assignedEmployee) === req.user.userid
+            ).length,
+            offerDrop: offerDrop.filter(
+              (candidate) =>
+                String(candidate.assignedEmployee) === req.user.userid
+            ).length,
+            joined: joined.filter(
+              (candidate) =>
+                String(candidate.assignedEmployee) === req.user.userid
+            ).length,
+            rejected: rejected.filter(
+              (candidate) =>
+                String(candidate.assignedEmployee) === req.user.userid
+            ).length,
+          };
       })
     );
   
@@ -226,6 +255,7 @@ const getCompanyUseType = async (req, res) => {
           "Pending Vice President",
         ],
       },
+      select: { $in: ["", null] },
       companyId: company._id,
     });
     const rejected = await Candidate.find({
@@ -249,18 +279,21 @@ const getCompanyUseType = async (req, res) => {
           "Reject Vice President",
         ],
       },
+      select: { $in: ["", null] },
       companyId: company._id,
     });
     const awaiting = await Candidate.find({
       interviewStatus: {
         $in: ["Select"],
       },
+      select: { $in: ["", null] },
       companyId: company._id,
     });
     const offerDrop = await Candidate.find({
       interviewStatus: {
         $in: ["Offer Drop"],
       },
+      select: { $in: ["", null] },
       companyId: company._id,
     });
     const joined = await Candidate.find({
@@ -309,7 +342,10 @@ const getCompanyCounts = async (req, res) => {
 
 const bulkInsert = async (req, res) => {
   const data = req.body;
-  const companies = await Company.insertMany(data,{ordered:false});
+  const companies = await Company.insertMany(data, {
+    ordered: false,
+    rawResult: true,
+  });
   res.status(StatusCodes.CREATED).json({ success: true });
 };
 const getRole = async (req, res) => {
