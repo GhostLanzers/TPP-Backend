@@ -10,7 +10,7 @@ const {
   getCompanyUseType,
   getCompanyCounts,
   bulkInsert,
-  getCompany,getRole,updateRole,editCompany
+  getCompany,getRole,updateRole,editCompany,checkNumber
 } = require("../controllers/company");
 
 router.route("/").get(getAllCompanies).post(addCompany);
@@ -22,4 +22,5 @@ router.route("/counts").get(getCompanyCounts);
 router.route("/bulkinsert").post(bulkInsert);
 router.route("/:companyId/role/:roleId").get(getRole).patch(updateRole);
 
+router.route("/mobile/:number").get(checkNumber);
 module.exports = router;

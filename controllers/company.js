@@ -340,6 +340,20 @@ const getCompanyCounts = async (req, res) => {
   res.status(StatusCodes.OK).json(values);
 };
 
+const checkNumber = async (req, res) => {
+  const { number: number } = req.params;
+
+  const candidate = await Company.find({
+    HRMobile: String(number),
+  });
+  var status = true;
+
+  if (candidate.length == 0) {
+    status = false;
+  }
+
+  res.status(StatusCodes.OK).json({ status });
+};
 const bulkInsert = async (req, res) => {
   const data = req.body;
   const companies = await Company.insertMany(data, {
@@ -413,4 +427,5 @@ module.exports = {
   getRole,
   updateRole,
   editCompany,
+  checkNumber,
 };
