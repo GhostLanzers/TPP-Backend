@@ -11,17 +11,18 @@ require("dotenv").config();
 const login = async (req, res) => {
   const { userMail, password } = req.body;
   if (!userMail || !password) {
-    throw new BadRequestError("Username and password required");
+    throw new BadRequestError("Username and Password Required");
   }
 
   const user = await Employee.findOne({ email: userMail });
+  console.log(user)
   if (!user) {
-    throw new NotFoundError("User with given mail not found");
+    throw new NotFoundError("Invalid User Email");
   }
 
   const passwordMatch = await user.checkPassword(password);
   if (!passwordMatch)
-    throw new UnauthenticatedError("Password does not Match , Try Again");
+    throw new UnauthenticatedError("Password Incorrect");
   if(!user.status)
     throw new UnauthenticatedError("Access Denied by Admin");
 

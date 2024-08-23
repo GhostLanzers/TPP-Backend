@@ -3,7 +3,7 @@ const CustomAPIError = require("./custom-api");
 
 class NotFoundError extends CustomAPIError {
   constructor(success, message) {
-    super(message);
+    super(success,message);
     this.statusCode = StatusCodes.NOT_FOUND;
   }
 }
