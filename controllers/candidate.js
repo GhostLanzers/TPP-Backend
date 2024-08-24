@@ -37,8 +37,7 @@ const getAllCandidates = async (req, res) => {
   if (awaiting) {
     query = { l1Assessment: ["GOOD", "TAC"], l2Assessment: null };
   }
-  console.log(req.query);
-
+  
   var candidates = await Candidate.find(query)
     .populate("companyId")
     .populate("roleId")

@@ -15,7 +15,6 @@ const login = async (req, res) => {
   }
 
   const user = await Employee.findOne({ email: userMail });
-  console.log(user)
   if (!user) {
     throw new NotFoundError("Invalid User Email");
   }
@@ -27,7 +26,7 @@ const login = async (req, res) => {
     throw new UnauthenticatedError("Access Denied by Admin");
 
   const token = user.createJWT();
-  res.status(StatusCodes.OK).json({ success: true, token: token });
+  res.status(StatusCodes.OK).json({ success: true, token: token,username:user.name,userMail:user.email,userid:user._id,employeeType:user.employeeType });
 };
 
 const status = async (req,res) => {
