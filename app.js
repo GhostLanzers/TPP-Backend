@@ -11,7 +11,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const corsOptions = {
-  origin: "https://tpp-frontend-f34c.onrender.com",
+  origin: "https://tpp-frontend-oeq8.onrender.com",
 };
 app.use(cors(corsOptions))
 // error handler
