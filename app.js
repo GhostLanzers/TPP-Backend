@@ -10,10 +10,7 @@ const connectDB = require("./db/connect");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const corsOptions = {
-  origin: "https://tpp-frontend-oeq8.onrender.com",
-};
-app.use(cors(corsOptions))
+app.use(cors())
 // error handler
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
