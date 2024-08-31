@@ -67,8 +67,6 @@ employeeSchema.pre("insertMany", async function (next, docs) {
     if (!doc.password) {
       const salt = await bcrypt.genSalt(10);
       doc.password = await bcrypt.hash("TPP@Pass", salt);
-      
-      
     }
   }
   next();
