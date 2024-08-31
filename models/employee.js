@@ -36,7 +36,7 @@ const employeeSchema = mongoose.Schema({
 });
 
 employeeSchema.pre("save", async function () {
-  if (!this.password) this.password = "TPP@Pass";
+  if (this.password=="" || !this.password) this.password = "TPP@Pass";
   const salt = await bcrypt.genSalt(10);
   this.password = bcrypt.hash(this.password, salt);
 });
