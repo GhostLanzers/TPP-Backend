@@ -19,11 +19,11 @@ const roleSchema = new mongoose.Schema({
   processType: {
     type: String,
     
-    default: "Domestic",
+    
   },
   experience: {
-    type: Number,
-    default: 0,
+    type: String,
+    
   },
   mandatorySkills: {
     type: [String],
@@ -69,7 +69,7 @@ const roleSchema = new mongoose.Schema({
   period: {
     type: String,
     
-    default: "Permanent",
+    
   },
   otherDocs: {
     type: String,

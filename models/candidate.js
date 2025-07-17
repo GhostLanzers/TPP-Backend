@@ -9,9 +9,18 @@ const candidateSchema = mongoose.Schema({
   mobile: {
     type: [String],
     required: [true, "Please provide Mobile Number"],
+    validate: {
+      validator: function (val) {
+        return val.every((v) => /^[0-9]\d{9}$/.test(v));
+      },
+      message: (props) => `${props.value} is not a valid phone number!`,
+    },
     unique: true,
   },
-  email: [String],
+  email: {
+    type: [String],
+   
+  },
   candidateId: String,
   homeTown: {
     type: String,
@@ -70,13 +79,6 @@ const candidateSchema = mongoose.Schema({
   },
   select: {
     type: String,
-
-    required: [
-      function () {
-        return this.interviewStatus == "Select";
-      },
-      "You can select if you selected Select in Interview Status",
-    ],
   },
 
   EMP_ID: {
@@ -85,7 +87,9 @@ const candidateSchema = mongoose.Schema({
   },
   onboardingDate: Date,
   nextTrackingDate: Date,
-
+  billingDate: Date,
+  invoiceNumber: String,
+  invoiceDate: Date,
   l1Assessment: {
     type: String,
   },
@@ -111,7 +115,7 @@ candidateSchema.pre("save", function (next) {
       { new: true, upsert: true }
     )
       .then(function (count) {
-        doc.candidateId = "CAN" + String(count.seq).padStart(5, "0");
+        doc.candidateId = "CAN" + String(count.seq).padStart(7, "0");
         next();
       })
       .catch(function (error) {

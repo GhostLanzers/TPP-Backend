@@ -37,7 +37,7 @@ const employeeSchema = mongoose.Schema({
 
 employeeSchema.pre("save", async function () {
   const salt = await bcrypt.genSalt(10);
-  this.password = bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 employeeSchema.methods.createJWT = function () {
@@ -63,10 +63,11 @@ employeeSchema.methods.checkPassword = async function (providedPassword) {
 
 employeeSchema.pre("insertMany", async function (next, docs) {
   for (const doc of docs) {
-    console.log(doc.password);
     if (!doc.password) {
       const salt = await bcrypt.genSalt(10);
       doc.password = await bcrypt.hash("TPP@Pass", salt);
+      
+      
     }
   }
   next();

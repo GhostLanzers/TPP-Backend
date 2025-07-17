@@ -10,7 +10,7 @@ const connectDB = require("./db/connect");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-app.use(cors())
+app.use(cors());
 // error handler
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");

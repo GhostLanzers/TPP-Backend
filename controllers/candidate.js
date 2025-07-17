@@ -37,7 +37,7 @@ const getAllCandidates = async (req, res) => {
   if (awaiting) {
     query = { l1Assessment: ["GOOD", "TAC"], l2Assessment: null };
   }
-  
+
   var candidates = await Candidate.find(query)
     .populate("companyId")
     .populate("roleId")
@@ -128,6 +128,8 @@ const getAssessmentCounts = async (req, res) => {
     "N2B",
     "ProcessRampdown",
     "ClientRampdown",
+    "InvoiceProcessed",
+    "BusinessTracking",
     "all",
   ];
   var final = {};
@@ -155,14 +157,14 @@ const getAssessmentCounts = async (req, res) => {
           $or: [
             {
               l1Assessment: {
-                $in: "NE-Fresher,NI-In-Job,NI-Experienced,NI-Convincing".split(
+                $in: "NE-Fresher,NI-In-Job,NE-Experienced,NI-Convincing".split(
                   ","
                 ),
               },
             },
             {
               l2Assessment: {
-                $in: "NE-Fresher,NI-In-Job,NI-Experienced,NI-Convincing".split(
+                $in: "NE-Fresher,NI-In-Job,NE-Experienced,NI-Convincing".split(
                   ","
                 ),
               },
@@ -202,7 +204,7 @@ const getAssessmentCounts = async (req, res) => {
       } else if (type === "InterviewScheduled") {
         query = {
           interviewStatus: {
-            $in: "TPP Venue,Client Venue,Pending FSR,Pending Amcat,Pending Versant,Pending Technical,Pending Typing,Pending Group Discussion,Pending Ops/Client,Pending Vice President".split(
+            $in: "Pending FSR,Pending Amcat,Pending Versant,Pending Technical,Pending Typing,Pending Group Discussion,Pending Ops/Client,Pending Vice President".split(
               ","
             ),
           },
@@ -219,7 +221,7 @@ const getAssessmentCounts = async (req, res) => {
         };
       } else if (type === "VirtualInterview") {
         query = {
-          interviewStatus: "Virtual Interview",
+          interviewStatus: {$in:"TPP Venue,Client Venue,Virtual Interview".split(",")},
           select: { $in: ["", null] },
         };
       } else if (type === "OfferDrop") {
@@ -241,6 +243,10 @@ const getAssessmentCounts = async (req, res) => {
         query = {
           select: "Tracking",
         };
+      } else if (type === "InvoiceProcessed") {
+        query = {
+          select: "Invoice Processed",
+        };
       } else if (type === "Billed") {
         query = {
           select: "Billed",
@@ -252,6 +258,12 @@ const getAssessmentCounts = async (req, res) => {
       } else if (type === "NonTenure") {
         query = {
           select: "Non Tenure",
+        };
+      } else if (type === "BusinessTracking") {
+        query = {
+          select: {
+            $in: ["Tracking", "Need to Bill", "Billed", "Invoice Processed"],
+          },
         };
       } else if (type === "ProcessRampdown") {
         query = {
@@ -295,7 +307,7 @@ const bulkInsert = async (req, res) => {
     ordered: false,
     rawResult: true,
   });
-  res.status(StatusCodes.CREATED).json({ success: true });
+  res.status(StatusCodes.CREATED).json({ success: true, employees });
 };
 
 const searchCandidate = async (req, res) => {
@@ -345,23 +357,32 @@ const getPotentialLeads = async (req, res) => {
 };
 
 const assignRecruiter = async (req, res) => {
-  const { list: list, companyId: companyId, roleId: roleId } = req.body;
+  const { list: list } = req.body;
   var candidates = [];
-  list.forEach(({ emp, part }) => {
-    part.forEach(async (_id) => {
-      const candidate = await Candidate.findByIdAndUpdate(
-        { _id: _id },
-        { assignedEmployee: emp, companyId: companyId, roleId: roleId }
-      );
-      candidates.push(candidate);
-    });
-  });
+  for(let {emp,part} of list){
+    for( let id of part){
+        try {
+          const candidate = await Candidate.findByIdAndUpdate(
+            { _id: id },
+            { assignedEmployee: emp }
+          );
+          candidates.push(candidate);
+          
+        } catch (error) {
+          console.log(id);
+          
+        }
+    }
+    
+  };
   res.status(StatusCodes.OK).json(candidates);
 };
 const assignSearch = async (req, res) => {
   const candidates = await Candidate.find({ ...req.body.query })
     .populate("assignedEmployee")
     .populate("createdByEmployee")
+    .populate("companyId")
+    .populate("roleId")
     .exec();
   res.status(StatusCodes.OK).json({ candidates });
 };
@@ -408,12 +429,12 @@ const getAllByClass = async (req, res) => {
       $or: [
         {
           l1Assessment: {
-            $in: "NE-Fresher,NI-In-Job,NI-Experienced,NI-Convincing".split(","),
+            $in: "NE-Fresher,NI-In-Job,NE-Experienced,NI-Convincing".split(","),
           },
         },
         {
           l2Assessment: {
-            $in: "NE-Fresher,NI-In-Job,NI-Experienced,NI-Convincing".split(","),
+            $in: "NE-Fresher,NI-In-Job,NE-Experienced,NI-Convincing".split(","),
           },
         },
       ],
@@ -451,7 +472,7 @@ const getAllByClass = async (req, res) => {
   } else if (type === "InterviewScheduled") {
     query = {
       interviewStatus: {
-        $in: "TPP Venue,Client Venue,Pending FSR,Pending Amcat,Pending Versant,Pending Technical,Pending Typing,Pending Group Discussion,Pending Ops/Client,Pending Vice President".split(
+        $in: "Pending FSR,Pending Amcat,Pending Versant,Pending Technical,Pending Typing,Pending Group Discussion,Pending Ops/Client,Pending Vice President".split(
           ","
         ),
       },
@@ -477,7 +498,7 @@ const getAllByClass = async (req, res) => {
     };
   } else if (type === "VirtualInterview") {
     query = {
-      interviewStatus: "Virtual Interview",
+      interviewStatus: {$in:"TPP Venue,Client Venue,Virtual Interview".split(",")},
       select: { $in: ["", null] },
     };
   } else if (type === "OfferDrop") {
@@ -499,6 +520,10 @@ const getAllByClass = async (req, res) => {
     query = {
       select: "Tracking",
     };
+  } else if (type === "InvoiceProcessed") {
+    query = {
+      select: "Invoice Processed",
+    };
   } else if (type === "Billed") {
     query = {
       select: "Billed",
@@ -506,6 +531,12 @@ const getAllByClass = async (req, res) => {
   } else if (type === "N2B") {
     query = {
       select: "Need to Bill",
+    };
+  } else if (type === "BusinessTracking") {
+    query = {
+      select: {
+        $in: ["Tracking", "Need to Bill", "Billed", "Invoice Processed"],
+      },
     };
   } else if (type === "NonTenure") {
     query = {

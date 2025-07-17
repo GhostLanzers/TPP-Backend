@@ -6,42 +6,42 @@ const companySchema = new mongoose.Schema({
   companyName: {
     type: String,
     required: [true, "Please Provide Company Name"],
-    maxlength: 30,
   },
   companyId: String,
-  HRName: {
-    type: String,
-  },
-  HRMobile: {
-    type: [String],
-    validate: [
-      (value) => {
-        return value.length != 10;
-      },
-      "Cannot have more than 10 Mobile Numbers",
-    ],
-   unique:true
-  },
-  HREmail: {
-    type: String,
-    required: [true, "Please provide Email"],
-    match: [
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-      "Please provide valid Email",
-    ],
-    
-  },
+  HR: [{
+    HRName: {
+      type: String,
+    },
+    HRMobile: {
+      type: [String],
+      validate: [
+        (value) => {
+          return value.length != 10;
+        },
+        "Cannot have more than 10 Mobile Numbers",
+      ],
+      unique: true,
+    },
+    HREmail: {
+      type: String,
+      match: [
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        "Please provide valid Email",
+      ],
+    },
+  }],
+
   about: {
     type: String,
     default: "",
   },
-  companyType:String,
+  companyType: String,
   remarks: {
     type: String,
     default: "",
   },
   response: {
-    type: String,    
+    type: String,
     default: "No Response",
   },
   empanelled: {
