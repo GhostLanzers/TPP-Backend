@@ -231,10 +231,28 @@ const deleteRole = async (req, res) => {
 };
 
 const getCompanyUseType = async (req, res) => {
-   const { companyType: companyType } = req.query;
+   const { 
+      companyType: companyType, 
+      page = 1, 
+      limit = 20 
+   } = req.query;
+   
    var query = { response: companyType };
    if (!companyType) query = {};
-   const companies = await Company.find(query).populate("roles").exec();
+   
+   // Pagination setup
+   const skip = (parseInt(page) - 1) * parseInt(limit);
+   
+   // Get total count for pagination
+   const total = await Company.countDocuments(query);
+   
+   const companies = await Company.find(query)
+      .populate("roles")
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean()
+      .exec();
+   
    const upcompanies = await Promise.all(
       companies.map(async (company) => {
          const inProcess = await Candidate.find({
@@ -256,6 +274,7 @@ const getCompanyUseType = async (req, res) => {
             select: { $in: ["", null] },
             companyId: company._id,
          });
+                  
          const rejected = await Candidate.find({
             interviewStatus: {
                $in: [
@@ -280,6 +299,7 @@ const getCompanyUseType = async (req, res) => {
             select: { $in: ["", null] },
             companyId: company._id,
          });
+         
          const awaiting = await Candidate.find({
             interviewStatus: {
                $in: ["Select"],
@@ -287,6 +307,7 @@ const getCompanyUseType = async (req, res) => {
             select: { $in: ["", null] },
             companyId: company._id,
          });
+         
          const offerDrop = await Candidate.find({
             interviewStatus: {
                $in: ["Offer Drop"],
@@ -294,25 +315,28 @@ const getCompanyUseType = async (req, res) => {
             select: { $in: ["", null] },
             companyId: company._id,
          });
+         
          const joined = await Candidate.find({
             select: {
                $in: ["Tracking", "Non tenure", "Need to Bill", "Billed"],
             },
             companyId: company._id,
          });
+         
          const access = ["Intern", "Recruiter"].includes(req.user.employeeType);
-         if (!access)
+         
+         if (!access) {
             return {
-               ...company._doc,
+               ...company,
                inProcess: inProcess.length,
                awaiting: awaiting.length,
                offerDrop: offerDrop.length,
                joined: joined.length,
                rejected: rejected.length,
             };
-         else
+         } else {
             return {
-               ...company._doc,
+               ...company,
                inProcess: inProcess.filter(
                   (candidate) =>
                      String(candidate.assignedEmployee) === req.user.userid
@@ -334,9 +358,16 @@ const getCompanyUseType = async (req, res) => {
                      String(candidate.assignedEmployee) === req.user.userid
                ).length,
             };
+         }
       })
    );
-   res.status(StatusCodes.OK).json(upcompanies);
+   
+   res.status(StatusCodes.OK).json({
+      companies: upcompanies,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+   });
 };
 
 const getCompanyCounts = async (req, res) => {
