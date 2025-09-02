@@ -4,6 +4,9 @@ const Candidate = require("../models/candidate");
 const Role = require("../models/role");
 const Company = require("../models/company");
 const { buildQuery } = require("../utils/candidateHelper");
+const ExcelJS = require("exceljs");
+const { z } = require("zod");
+
 const addCandidate = async (req, res) => {
    const candidate = await Candidate.create({ ...req.body });
    res.status(StatusCodes.CREATED).json({
@@ -260,6 +263,141 @@ const getAllByClassOnlyIDs = async (req, res) => {
    res.status(StatusCodes.OK).json(candidates);
 };
 
+
+
+// API to export selected candidates to Excel
+const exportSelectedCandidatesExcel = async (req, res) => {
+   try {
+      // Validate input
+      const schema = z.object({
+         ids: z
+            .array(z.string().min(1))
+            .min(1, "At least one candidate ID is required"),
+         name: z.string().optional(),
+      });
+      const { ids, name } = schema.parse(req.body);
+
+      // Fetch candidates by IDs
+      const candidates = await Candidate.find({ _id: { $in: ids } })
+         .populate("companyId", "_id companyName")
+         .populate("roleId", "_id role")
+         .populate("assignedEmployee", "_id name")
+         .populate("createdByEmployee", "_id name")
+         .lean();
+      res.setHeader(
+         "Content-Type",
+         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+         "Content-Disposition",
+         `attachment; filename="${name || "candidates"}.xlsx"`
+      );
+      // Create workbook and worksheet
+const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: res });
+const worksheet = workbook.addWorksheet("Candidates");
+
+      // Define columns (do not leave any out)
+      worksheet.columns = [
+         { header: "Candidate ID", key: "candidateId", width: 15 },
+         { header: "Full Name", key: "fullName", width: 20 },
+         { header: "Mobile", key: "mobile", width: 20 },
+         { header: "Email", key: "email", width: 25 },
+         { header: "Home Town", key: "homeTown", width: 15 },
+         { header: "Rate", key: "rate", width: 10 },
+         { header: "Current City", key: "currentCity", width: 15 },
+         { header: "Qualifications", key: "qualifications", width: 25 },
+         { header: "Languages", key: "languages", width: 25 },
+         { header: "Skills", key: "skills", width: 25 },
+         { header: "Experience", key: "experience", width: 30 },
+         { header: "Company", key: "companyName", width: 20 },
+         { header: "Role", key: "roleName", width: 20 },
+         { header: "Interview Date", key: "interviewDate", width: 15 },
+         { header: "Remarks", key: "remarks", width: 20 },
+         { header: "Interview Status", key: "interviewStatus", width: 20 },
+         { header: "Select", key: "select", width: 10 },
+         { header: "EMP_ID", key: "EMP_ID", width: 15 },
+         { header: "Onboarding Date", key: "onboardingDate", width: 15 },
+         { header: "Next Tracking Date", key: "nextTrackingDate", width: 15 },
+         { header: "Billing Date", key: "billingDate", width: 15 },
+         { header: "Invoice Number", key: "invoiceNumber", width: 15 },
+         { header: "Invoice Date", key: "invoiceDate", width: 15 },
+         { header: "L1 Assessment", key: "l1Assessment", width: 15 },
+         { header: "L2 Assessment", key: "l2Assessment", width: 15 },
+         {
+            header: "Assigned Employee",
+            key: "assignedEmployeeName",
+            width: 20,
+         },
+         { header: "Created By", key: "createdByEmployeeName", width: 20 },
+      ];
+
+      // Add rows
+      candidates.forEach((c) => {
+         worksheet
+            .addRow({
+               candidateId: c.candidateId || "",
+               fullName: c.fullName || "",
+               mobile: Array.isArray(c.mobile) ? c.mobile.join(", ") : "",
+               email: Array.isArray(c.email) ? c.email.join(", ") : "",
+               homeTown: c.homeTown || "",
+               rate: c.rate ?? "",
+               currentCity: c.currentCity || "",
+               qualifications: Array.isArray(c.qualifications)
+                  ? c.qualifications
+                       .map((q) => `${q.qualification || ""} (${q.YOP || ""})`)
+                       .join("; ")
+                  : "",
+               languages: Array.isArray(c.languages)
+                  ? c.languages
+                       .map((l) => `${l.language || ""} (${l.level || ""})`)
+                       .join("; ")
+                  : "",
+               skills: Array.isArray(c.skills) ? c.skills.join(", ") : "",
+               experience: Array.isArray(c.experience)
+                  ? c.experience
+                       .map((e) => `${e.companyName || ""} (${e.role || ""})`)
+                       .join("; ")
+                  : "",
+               companyName: c.companyId?.companyName || "",
+               roleName: c.roleId?.role || "",
+               interviewDate: c.interviewDate
+                  ? new Date(c.interviewDate).toLocaleDateString()
+                  : "",
+               remarks: c.remarks || "",
+               interviewStatus: c.interviewStatus || "",
+               select: c.select || "",
+               EMP_ID: c.EMP_ID || "",
+               onboardingDate: c.onboardingDate
+                  ? new Date(c.onboardingDate).toLocaleDateString()
+                  : "",
+               nextTrackingDate: c.nextTrackingDate
+                  ? new Date(c.nextTrackingDate).toLocaleDateString()
+                  : "",
+               billingDate: c.billingDate
+                  ? new Date(c.billingDate).toLocaleDateString()
+                  : "",
+               invoiceNumber: c.invoiceNumber || "",
+               invoiceDate: c.invoiceDate
+                  ? new Date(c.invoiceDate).toLocaleDateString()
+                  : "",
+               l1Assessment: c.l1Assessment || "",
+               l2Assessment: c.l2Assessment || "",
+               assignedEmployeeName: c.assignedEmployee?.name || "",
+               createdByEmployeeName: c.createdByEmployee?.name || "",
+            })
+            .commit();;
+      });
+      // Set response headers for file download
+      worksheet.commit();
+      await workbook.commit();
+   } catch (error) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+         success: false,
+         message: error.message,
+      });
+   }
+};
+
 module.exports = {
    getCandidate,
    addCandidate,
@@ -274,4 +412,5 @@ module.exports = {
    checkNumber,
    getAllByClass,
    getAllByClassOnlyIDs,
+   exportSelectedCandidatesExcel,
 };

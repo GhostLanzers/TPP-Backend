@@ -17,6 +17,7 @@ const {
    checkNumber,
    deleteRole,
    getCompanyAndRoleNamesForCandidate,
+   exportSelectedCompaniesExcel,
 } = require("../controllers/company");
 
 router.route("/").get(getAllCompanies).post(addCompany);
@@ -28,6 +29,6 @@ router.route("/candidateCompanyType").get(getCompanyAndRoleNamesForCandidate);
 router.route("/counts").get(getCompanyCounts);
 router.route("/bulkinsert").post(bulkInsert);
 router.route("/:companyId/role/:roleId").get(getRole).patch(updateRole).delete(deleteRole);
-
+router.route("/excelExport").post(exportSelectedCompaniesExcel);
 router.route("/mobile/:number").get(checkNumber);
 module.exports = router;

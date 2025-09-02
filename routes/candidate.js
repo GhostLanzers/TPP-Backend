@@ -15,6 +15,7 @@ const {
    checkNumber,
    getAllByClass,
    getAllByClassOnlyIDs,
+   exportSelectedCandidatesExcel,
 } = require("../controllers/candidate");
 
 router.route("/").post(addCandidate);
@@ -32,4 +33,5 @@ router.route("/candidate/assignSearch").post(assignSearch);
 router.route("/mobile/:number").get(checkNumber);
 router.route("/data/:type").get(getAllByClass);
 router.route("/dataId/:type").get(getAllByClassOnlyIDs);
+router.route("/excelExport").post(exportSelectedCandidatesExcel);
 module.exports = router;
