@@ -2,7 +2,7 @@ const buildQuery = (type) => {
    switch (type) {
       case "newCandidates":
          return {
-            l1Assessment: { $in: ["DND", "Number Not Reachable"] },
+            l1Assessment: { $in: ["", null] },
             l2Assessment: { $in: ["", null] },
          };
       case "L1L2WrongNumbers":
@@ -81,8 +81,11 @@ const buildQuery = (type) => {
                   "Pending Technical",
                   "Pending Typing",
                   "Pending Group Discussion",
-                  "Pending Ops/Client",
+                  "Pending Ops",
                   "Pending Vice President",
+                  "Pending Re-Versant",
+                  "Pending Re-Amcat",
+                  "Pending Client",
                ],
             },
             select: { $in: ["", null] },
@@ -107,6 +110,8 @@ const buildQuery = (type) => {
                   "Reject Ops/Client Stability",
                   "Reject Ops/Client Domain",
                   "Reject Vice President",
+                  "Source Conflict",
+                  "BGV Reject-Pre",
                ],
             },
             select: { $in: ["", null] },
@@ -114,13 +119,22 @@ const buildQuery = (type) => {
       case "VirtualInterview":
          return {
             interviewStatus: {
-               $in: ["TPP Venue", "Client Venue", "Virtual Interview"],
+               $in: [
+                  "TPP Venue",
+                  "Client Venue",
+                  "Virtual Interview",
+                  "TPP Venue-R",
+                  "Client Venue-R",
+                  "Virtual-R",
+                  "Pending Training",
+                  "Cooling Period",
+               ],
             },
             select: { $in: ["", null] },
          };
       case "OfferDrop":
          return {
-            interviewStatus: "Offer Drop",
+            interviewStatus: { $in: ["Tenure-Source Conflict", "Offer Drop"] },
             select: { $in: ["", null] },
          };
       case "AwaitingJoining":
@@ -130,11 +144,11 @@ const buildQuery = (type) => {
          };
       case "Hold":
          return {
-            interviewStatus: "Hold",
+            interviewStatus: { $in: ["Hold", "TPP FT", "TPP Intern"] },
             select: { $in: ["", null] },
          };
       case "TrackingTenure":
-         return { select: "Tracking" };
+         return { select: { $in: ["Billed & Tracking", "Tracking"] } };
       case "InvoiceProcessed":
          return { select: "Invoice Processed" };
       case "Billed":
@@ -142,7 +156,7 @@ const buildQuery = (type) => {
       case "N2B":
          return { select: "Need to Bill" };
       case "NonTenure":
-         return { select: "Non Tenure" };
+         return { select: { $in: ["BGV Reject-Post", "Non Tenure"] } };
       case "BusinessTracking":
          return {
             select: {
