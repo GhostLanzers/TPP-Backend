@@ -12,9 +12,9 @@ const buildQuery = (type) => {
                { l2Assessment: "Wrong Number" },
             ],
          };
-      case "L1L2Blacklist":
+      case "Blacklist":
          return {
-            $or: [{ l1Assessment: "Blacklist" }, { l2Assessment: "Blacklist" }],
+             l2Assessment: "Blacklist" ,
          };
       case "NonLeads":
          return {

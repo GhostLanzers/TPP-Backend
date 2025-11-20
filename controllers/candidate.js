@@ -23,6 +23,8 @@ const getCandidate = async (req, res) => {
    })
       .populate("companyId")
       .populate("roleId")
+      .populate("assignedEmployee", "_id name")
+      .populate("createdByEmployee","_id name")
       .exec();
    if (!candidate) throw new NotFoundError("Candidate with given ID Not Found");
    res.status(StatusCodes.OK).json(candidate);
@@ -42,7 +44,14 @@ const updateCandidate = async (req, res) => {
          runValidators: true,
          context: "query",
       }
-   );
+   )
+      .select(
+         "_id createdByEmployee assignedEmployee fullName candidateId mobile email l1Assessment l2Assessment companyId roleId interviewDate interviewStatus onboardingDate nextTrackingDate billingDate invoiceDate invoiceNumber remarks select rate"
+      )
+      .populate("companyId", "_id companyName ")
+      .populate("roleId", "_id role")
+      .populate("assignedEmployee", "_id name")
+      .populate("createdByEmployee", "_id name");
    if (!candidate) throw new NotFoundError("Candidate with given ID Not Found");
    res.status(StatusCodes.OK).json(candidate);
 };
@@ -61,7 +70,7 @@ const getAssessmentCounts = async (req, res) => {
    const titles = [
       "newCandidates",
       "L1L2WrongNumbers",
-      "L1L2Blacklist",
+      "Blacklist",
       "NonLeads",
       "L1WD",
       "L2WD",
@@ -127,7 +136,12 @@ const searchCandidate = async (req, res) => {
       query.push({ mobile: { $regex: ".*" + mobile + ".*", $options: "i" } });
    if (email)
       query.push({ email: { $regex: ".*" + email + ".*", $options: "i" } });
-   const candidates = await Candidate.find({ $or: query });
+   const candidates = await Candidate.find({ $or: query })
+      .select(
+         "_id createdByEmployee assignedEmployee fullName candidateId mobile l1Assessment l2Assessment interviewStatus "
+      )
+      .populate("assignedEmployee", "_id name")
+      .populate("createdByEmployee", "_id name");
 
    res.status(StatusCodes.OK).json(candidates);
 };
@@ -172,7 +186,7 @@ const assignRecruiter = async (req, res) => {
          try {
             const candidate = await Candidate.findByIdAndUpdate(
                { _id: id },
-               { assignedEmployee: emp }
+               { assignedEmployee: emp, assignedOn: new Date() }
             );
             candidates.push(candidate);
          } catch (error) {
@@ -227,7 +241,7 @@ const getAllByClass = async (req, res) => {
 
    const candidates = await Candidate.find(query)
       .select(
-         "_id createdByEmployee assignedEmployee fullName candidateId mobile email l1Assessment l2Assessment companyId roleId interviewDate interviewStatus onboardingDate nextTrackingDate billingDate invoiceDate invoiceNumber"
+         "_id createdByEmployee assignedEmployee fullName candidateId mobile email l1Assessment l2Assessment companyId roleId interviewDate interviewStatus onboardingDate nextTrackingDate billingDate invoiceDate invoiceNumber remarks select rate"
       )
       .populate("companyId", "_id companyName ")
       .populate("roleId", "_id role")
@@ -263,8 +277,6 @@ const getAllByClassOnlyIDs = async (req, res) => {
    res.status(StatusCodes.OK).json(candidates);
 };
 
-
-
 // API to export selected candidates to Excel
 const exportSelectedCandidatesExcel = async (req, res) => {
    try {
@@ -293,8 +305,8 @@ const exportSelectedCandidatesExcel = async (req, res) => {
          `attachment; filename="${name || "candidates"}.xlsx"`
       );
       // Create workbook and worksheet
-const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: res });
-const worksheet = workbook.addWorksheet("Candidates");
+      const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: res });
+      const worksheet = workbook.addWorksheet("Candidates");
 
       // Define columns (do not leave any out)
       worksheet.columns = [
@@ -385,7 +397,7 @@ const worksheet = workbook.addWorksheet("Candidates");
                assignedEmployeeName: c.assignedEmployee?.name || "",
                createdByEmployeeName: c.createdByEmployee?.name || "",
             })
-            .commit();;
+            .commit();
       });
       // Set response headers for file download
       worksheet.commit();
