@@ -120,10 +120,12 @@ const getAssessmentCounts = async (req, res) => {
 };
 const bulkInsert = async (req, res) => {
    const data = req.body;
-   const employees = await Candidate.insertMany(data, {
+  
+   
+   const employees = await Candidate.insertMany(data.candidates, {
       ordered: false,
       rawResult: true,
-   });
+   }); 
    res.status(StatusCodes.CREATED).json({ success: true, employees });
 };
 
@@ -197,6 +199,7 @@ const assignRecruiter = async (req, res) => {
    res.status(StatusCodes.OK).json(candidates);
 };
 const assignSearch = async (req, res) => {
+   
    const candidates = await Candidate.find({ ...req.body.query })
       .populate("assignedEmployee")
       .populate("createdByEmployee")
@@ -409,6 +412,55 @@ const exportSelectedCandidatesExcel = async (req, res) => {
       });
    }
 };
+const bulkDeleteCandidates = async (req, res) => {
+   try {
+      const { ids } = req.body;
+
+      // Validation: Check if ids is provided and is an array
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+         return res.status(400).json({
+            success: false,
+            message: "Invalid request. Please provide an array of IDs.",
+         });
+      }
+
+      // Optional: Add authorization check (only admin can bulk delete)
+      // const user = req.user; // Assuming you have user from auth middleware
+      // if (user.employeeType !== "Admin") {
+      //    return res.status(403).json({
+      //       success: false,
+      //       message: "Only admins can perform bulk delete operations",
+      //    });
+      // }
+
+      // Perform bulk delete
+      const result = await Candidate.deleteMany({
+         _id: { $in: ids },
+      });
+
+      // Check if any documents were deleted
+      if (result.deletedCount === 0) {
+         return res.status(404).json({
+            success: false,
+            message: "No candidates found with the provided IDs.",
+            deletedCount: 0,
+         });
+      }
+
+      res.status(200).json({
+         success: true,
+         message: `Successfully deleted ${result.deletedCount} candidate(s)`,
+         deletedCount: result.deletedCount,
+      });
+   } catch (error) {
+      console.error("Error in bulkDeleteCandidates:", error);
+      res.status(500).json({
+         success: false,
+         message: "Failed to delete candidates",
+         error: error.message,
+      });
+   }
+};
 
 module.exports = {
    getCandidate,
@@ -425,4 +477,5 @@ module.exports = {
    getAllByClass,
    getAllByClassOnlyIDs,
    exportSelectedCandidatesExcel,
+   bulkDeleteCandidates
 };

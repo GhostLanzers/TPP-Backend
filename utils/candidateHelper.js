@@ -148,7 +148,7 @@ const buildQuery = (type) => {
             select: { $in: ["", null] },
          };
       case "TrackingTenure":
-         return { select: { $in: ["Billed & Tracking", "Tracking"] } };
+         return { select: { $in: ["Billed & Tracking", "Tracking","Tracking & NR"] } };
       case "InvoiceProcessed":
          return { select: "Invoice Processed" };
       case "Billed":

@@ -510,6 +510,22 @@ const exportSelectedCompaniesExcel = async (req, res) => {
       });
    }
 };
+const searchCompany = async (req, res) => {
+   const { companyName: name, HRMobile: mobile, HREmail: email } = req.body;
+   query = [];
+   if (name)
+      query.push({ companyName: { $regex: ".*" + name + ".*", $options: "i" } });
+   if (mobile)
+      query.push({ "HR.HRMobile": { $regex: ".*" + mobile + ".*", $options: "i" } });
+   if (email)
+      query.push({ "HR.HREmail": { $regex: ".*" + email + ".*", $options: "i" } });
+   const companies = await Company.find({ $or: query })
+      .select(
+         "_id companyName companyId HR remarks empanelled about remarks companyType response empanelled "
+      )
+     
+   res.status(StatusCodes.OK).json(companies);
+};
 
 module.exports = {
    getAllCompanies,
@@ -528,4 +544,5 @@ module.exports = {
    deleteRole,
    getCompanyAndRoleNamesForCandidate,
    exportSelectedCompaniesExcel,
+   searchCompany
 };

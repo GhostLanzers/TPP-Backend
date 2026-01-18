@@ -140,7 +140,7 @@ const searchEmployee = async (req, res) => {
    if (empType.length > 0) {
       query.push({ employeeType: { $in: empType } });
    }
-   console.log(query);
+ 
 
    const candidates = await Employee.find({ $or: query }).select(
       "_id name employeeId email employeeType status mobile"

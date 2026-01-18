@@ -16,6 +16,7 @@ const {
    getAllByClass,
    getAllByClassOnlyIDs,
    exportSelectedCandidatesExcel,
+   bulkDeleteCandidates
 } = require("../controllers/candidate");
 
 router.route("/").post(addCandidate);
@@ -34,4 +35,5 @@ router.route("/mobile/:number").get(checkNumber);
 router.route("/data/:type").get(getAllByClass);
 router.route("/dataId/:type").get(getAllByClassOnlyIDs);
 router.route("/excelExport").post(exportSelectedCandidatesExcel);
+router.route("/bulkDelete").post(bulkDeleteCandidates);
 module.exports = router;
